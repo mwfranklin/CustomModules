@@ -486,6 +486,33 @@ def one_chain_pdb(pdb_file, chainID = "A"):
         elif line[0:3] == "TER" and line[21] == chainID:
             one_chain_lines.append(line)
     return one_chain_lines
+
+def renumber_pdb_contig(filename, start_value = 1, inplace = True):
+    with open(filename, "r") as orig_pdb:
+        orig_pdb = orig_pdb.readlines()
+    if inplace == True:
+        new_filename = filename
+    else: 
+        new_filename = filename[:-4] + "Renumb.pdb"
+    
+    with open(new_filename, "w+") as new_pdb:    
+        prev_res = -999
+        count = start_value - 1
+        for line in orig_pdb:
+            if "ANISOU" in line: continue
+            if line[0:4] == "ATOM" or line[0:6] == "HETATM":
+                this_res = int(line[22:26].strip())
+                if this_res == prev_res:
+                    new_res_num = (4-len(str(count)))*" " + str(count)
+                    new_pdb.write(line[0:22] + new_res_num + line[26:])
+                    prev_res = this_res
+                else:
+                    count += 1
+                    new_res_num = (4-len(str(count)))*" " + str(count)
+                    new_pdb.write(line[0:22] + new_res_num + line[26:])
+                    prev_res = this_res
+            else:
+                new_pdb.write(line)
  
 def renumber_pdb(pdb_file, filename, start_value):
     with open(filename, "w+") as new_pdb:

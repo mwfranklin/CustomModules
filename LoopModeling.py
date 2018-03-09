@@ -3,6 +3,7 @@ import os
 import glob
 import decimal
 import subprocess
+import pandas
 
 aa = ["ALA", "ARG", "ASN", "ASP", "CYS", "GLN", "GLU", "GLY", "HIS", "ILE", "LEU", "LYS", "MET", "PHE", "PRO", "SER", "THR", "TRP", "TYR", "VAL"]
 oneletAA = ["A", "R", "N", "D", "C", "Q", "E", "G", "H", "I", "L", "K", "M", "F", "P", "S", "T", "W", "Y", "V"]
@@ -228,6 +229,28 @@ def insert_seq_del_seq_renumb(insert_at, len_del, seq, filename, pdbname, mDis =
                     #print(res_pairs)
                 insert_pdb.write(line)
     return (insert_at-1), end_res
+
+def process_PETALS(filename):
+    scores = subprocess.check_output(["grep", "^LOOP", filename])
+    scores = scores.decode("utf-8").strip().split("\n")
+    scores = [x.split()[1:] for x in scores]
+    scores = pandas.DataFrame.from_records(scores, columns = ("ModelNum", "dfire", "oscar", "dis", "bb"))
+    scores.to_csv(filename[:-4] + "_Scores.txt", sep = "\t", index = False)
+                    
+    with open(filename, "r") as inData:
+        raw_petals = inData.readlines()
+
+    #score_index = score_fxns.index(orderby)
+    with open(filename[:-4] + ".pdb", "w+") as outData:
+        for line in raw_petals:
+            if "LOOP" in line:
+                line = line.split()
+                outData.write("MODEL %s\n"%line[1])
+                outData.write(" ".join(line) + "\n")
+            elif "END" in line:
+                outData.write("ENDMDL\n")
+            else:
+                outData.write(line)
       
 def continuous_atoms(filename, pdbname):
     with open(filename, "r") as orig_pdb:

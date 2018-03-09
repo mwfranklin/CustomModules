@@ -250,7 +250,7 @@ def process_PETALS(filename):
             elif "END" in line:
                 outData.write("ENDMDL\n")
             else:
-                outData.write(line)
+                outData.write(line.strip() + "  1.00  0.00\n")
       
 def continuous_atoms(filename, pdbname):
     with open(filename, "r") as orig_pdb:

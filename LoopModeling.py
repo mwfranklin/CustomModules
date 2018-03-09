@@ -12,7 +12,7 @@ def model_same_seq(start_at, loop_size, filename, chainID, pdbname, mDis = False
     done_list = []
     with open(filename, "r") as orig_pdb, open("%s_UndefLoops.pdb" %pdbname, "w+") as insert_pdb:
         for line in orig_pdb:
-            if ("ATOM" in line[0:4] and line[21] == chainID) or (line[17:20] == "MSE" and line[21] == chainID)): 
+            if (("ATOM" in line[0:4] and line[21] == chainID) or (line[17:20] == "MSE" and line[21] == chainID)): 
                 if (int(line[22:26]) < start_at or int(line[22:26]) > (start_at + loop_size -1)):
                     insert_pdb.write(line)
                 elif int(line[22:26]) == start_at:
@@ -135,7 +135,7 @@ def insert_seq_renumb(insert_at, seq, filename, pdbname, mDis = False):
                         res_num = int(line[22:26]) + len(seq)
                         new_res_num = (4-len(str(res_num)))*" " + str(res_num)
                         if res1 not in res_pairs: res_pairs[res1] = new_res_num
-                        insert_pdb.write(line[0:6] + new_atom_num + line[11:22] + new_res_num + line[27:])
+                        insert_pdb.write(line[0:6] + new_atom_num + line[11:22] + new_res_num + line[26:])
                         end_res = new_res_num
                     else:
                         continue
@@ -149,7 +149,7 @@ def insert_seq_renumb(insert_at, seq, filename, pdbname, mDis = False):
                     new_res_num = (4-len(str(res_num)))*" " + str(res_num)
                     if res1 not in res_pairs: res_pairs[res1] = new_res_num
                     
-                    insert_pdb.write(line[0:6] + new_atom_num + line[11:22] + new_res_num + line[27:])
+                    insert_pdb.write(line[0:6] + new_atom_num + line[11:22] + new_res_num + line[26:])
                 
             else:
                 if "ENDMDL" in line: 
@@ -188,9 +188,9 @@ def insert_seq_del_seq_renumb(insert_at, len_del, seq, filename, pdbname, mDis =
                             new_atom_num = (5-len(str(atom_num)))*" " + str(atom_num)
                             new_res_num = (4-len(str(start_res)))*" " + str(start_res)
                             if mDis == True:
-                                new_line = "ATOM  " + new_atom_num + " H    " + aa[oneletAA.index(char)] + "  " + new_res_num + "       0.000   0.000   0.000  1.00  1.00"
+                                new_line = "ATOM  " + new_atom_num + "  H   " + aa[oneletAA.index(char)] + "  " + new_res_num + "       0.000   0.000   0.000  1.00  1.00"
                             else:
-                                new_line = "ATOM  " + new_atom_num + " CA   " + aa[oneletAA.index(char)] + "  " + new_res_num + "       0.000   0.000   0.000  1.00  1.00"
+                                new_line = "ATOM  " + new_atom_num + "  CA  " + aa[oneletAA.index(char)] + "  " + new_res_num + "       0.000   0.000   0.000  1.00  1.00"
                             print(new_line)
                             insert_pdb.write(new_line + "\n")
                             start_res +=1
@@ -212,7 +212,7 @@ def insert_seq_del_seq_renumb(insert_at, len_del, seq, filename, pdbname, mDis =
                         new_res_num = (4-len(str(res_num)))*" " + str(res_num)
                         if res1 not in res_pairs: res_pairs[res1] = new_res_num
                         end_res = new_res_num
-                        insert_pdb.write(line[0:6] + new_atom_num + line[11:22] + new_res_num + line[27:])
+                        insert_pdb.write(line[0:6] + new_atom_num + line[11:22] + new_res_num + line[26:])
                     
                 elif check_lists == False: 
                     res1 = (line[22:26])
@@ -220,7 +220,7 @@ def insert_seq_del_seq_renumb(insert_at, len_del, seq, filename, pdbname, mDis =
                     new_res_num = (4-len(str(res_num)))*" " + str(res_num)
                     if res1 not in res_pairs: res_pairs[res1] = new_res_num
                     
-                    insert_pdb.write(line[0:22] + new_res_num + line[27:])
+                    insert_pdb.write(line[0:22] + new_res_num + line[26:])
             
             elif check_lists == False:
                 if "ENDMDL" in line: 

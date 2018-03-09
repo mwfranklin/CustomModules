@@ -7,12 +7,12 @@ import subprocess
 aa = ["ALA", "ARG", "ASN", "ASP", "CYS", "GLN", "GLU", "GLY", "HIS", "ILE", "LEU", "LYS", "MET", "PHE", "PRO", "SER", "THR", "TRP", "TYR", "VAL"]
 oneletAA = ["A", "R", "N", "D", "C", "Q", "E", "G", "H", "I", "L", "K", "M", "F", "P", "S", "T", "W", "Y", "V"]
 
-def model_seq_mDis(start_at, loop_size, filename, chainID, pdbname):
+def model_same_seq(start_at, loop_size, filename, chainID, pdbname, mDis = False):
     start_at = int(start_at)
     done_list = []
     with open(filename, "r") as orig_pdb, open("%s_UndefLoops.pdb" %pdbname, "w+") as insert_pdb:
         for line in orig_pdb:
-            if ("ATOM" in line[0:4] and line[21] == chainID):
+            if ("ATOM" in line[0:4] and line[21] == chainID) or (line[17:20] == "MSE" and line[21] == chainID)): 
                 if (int(line[22:26]) < start_at or int(line[22:26]) > (start_at + loop_size -1)):
                     insert_pdb.write(line)
                 elif int(line[22:26]) == start_at:
@@ -27,37 +27,15 @@ def model_seq_mDis(start_at, loop_size, filename, chainID, pdbname):
                         continue
                 else:
                     if int(line[22:26]) not in done_list:
-                        insert_pdb.write(line[0:11] + "  H  " + line[16:26] + "       0.000   0.000   0.000  1.00  1.00\n")
+                        if mDis == False:
+                            insert_pdb.write(line[0:11] + "  CA " + line[16:26] + "       0.000   0.000   0.000  1.00  1.00\n")
+                        else:
+                            insert_pdb.write(line[0:11] + "  H  " + line[16:26] + "       0.000   0.000   0.000  1.00  1.00\n")
                         done_list.append(int(line[22:26]))
             elif "ENDMDL" in line:
                 break
-
-def model_seq_PETALS(start_at, loop_size, filename, chainID, pdbname):
-    start_at = int(start_at)
-    done_list = []
-    with open(filename, "r") as orig_pdb, open("%s_UndefLoops.pdb" %pdbname, "w+") as insert_pdb:
-        for line in orig_pdb:
-            if (("ATOM" in line[0:4] and line[21] == chainID) or (line[17:20] == "MSE" and line[21] == chainID)):
-                if (int(line[22:26]) < start_at or int(line[22:26]) > (start_at + loop_size -1)):
-                    insert_pdb.write(line)
-                elif int(line[22:26]) == start_at:
-                    if line[12:16].strip() == "N" or line[12:16].strip() == "CA":
-                        insert_pdb.write(line)
-                    else: 
-                        continue
-                elif int(line[22:26]) == start_at + loop_size -1:
-                    if line[12:16].strip() == "C" or line[12:16].strip() == "CA":
-                        insert_pdb.write(line)
-                    else: 
-                        continue
-                else:
-                    if int(line[22:26]) not in done_list:
-                        insert_pdb.write(line[0:11] + "  CA " + line[16:26] + "       0.000   0.000   0.000  1.00  1.00\n")
-                        done_list.append(int(line[22:26]))
-            elif "ENDMDL" in line:
-                break
-                        
-def insert_missing_seq(insert_at, seq, filename, pdbname):
+                
+def insert_missing_seq(insert_at, seq, filename, pdbname, mDis = False):
     insert_at = int(insert_at)
     inserted = False
     check_lists = False
@@ -86,7 +64,10 @@ def insert_missing_seq(insert_at, seq, filename, pdbname):
                         for char in seq:
                             new_atom_num = (5-len(str(atom_num)))*" " + str(atom_num)
                             new_res_num = (4-len(str(start_res)))*" " + str(start_res)
-                            new_line = "ATOM  " + new_atom_num + " H    " + aa[oneletAA.index(char)] + "  " + new_res_num + "       0.000   0.000   0.000  1.00  1.00"
+                            if mDis == True:
+                                new_line = "ATOM  " + new_atom_num + " H    " + aa[oneletAA.index(char)] + "  " + new_res_num + "       0.000   0.000   0.000  1.00  1.00"
+                            else:
+                                new_line = "ATOM  " + new_atom_num + " CA   " + aa[oneletAA.index(char)] + "  " + new_res_num + "       0.000   0.000   0.000  1.00  1.00"
                             print(new_line)
                             insert_pdb.write(new_line + "\n")
                             start_res +=1
@@ -103,7 +84,7 @@ def insert_missing_seq(insert_at, seq, filename, pdbname):
             else:
                 insert_pdb.write(line)
                     
-def insert_seq_renumb_mDis(insert_at, seq, filename, pdbname):
+def insert_seq_renumb(insert_at, seq, filename, pdbname, mDis = False):
     insert_at = int(insert_at)
     inserted = False
     check_lists = False
@@ -135,7 +116,10 @@ def insert_seq_renumb_mDis(insert_at, seq, filename, pdbname):
                         for char in seq:
                             new_atom_num = (5-len(str(atom_num)))*" " + str(atom_num)
                             new_res_num = (4-len(str(start_res)))*" " + str(start_res)
-                            new_line = "ATOM  " + new_atom_num + " H    " + aa[oneletAA.index(char)] + "  " + new_res_num + "       0.000   0.000   0.000  1.00  1.00"
+                            if mDis == True:
+                                new_line = "ATOM  " + new_atom_num + " H    " + aa[oneletAA.index(char)] + "  " + new_res_num + "       0.000   0.000   0.000  1.00  1.00"
+                            else:
+                                new_line = "ATOM  " + new_atom_num + " CA   " + aa[oneletAA.index(char)] + "  " + new_res_num + "       0.000   0.000   0.000  1.00  1.00"
                             print(new_line)
                             insert_pdb.write(new_line + "\n")
                             start_res +=1
@@ -173,7 +157,7 @@ def insert_seq_renumb_mDis(insert_at, seq, filename, pdbname):
                     #print(res_pairs)
                 insert_pdb.write(line)
 
-def insert_seq_del_seq_renumb_mDis(insert_at, len_del, seq, filename, pdbname):
+def insert_seq_del_seq_renumb(insert_at, len_del, seq, filename, pdbname, mDis = False):
     print(insert_at, insert_at+len_del)
     insert_at = int(insert_at)
     inserted = False
@@ -203,7 +187,10 @@ def insert_seq_del_seq_renumb_mDis(insert_at, len_del, seq, filename, pdbname):
                         for char in seq:
                             new_atom_num = (5-len(str(atom_num)))*" " + str(atom_num)
                             new_res_num = (4-len(str(start_res)))*" " + str(start_res)
-                            new_line = "ATOM  " + new_atom_num + " H    " + aa[oneletAA.index(char)] + "  " + new_res_num + "       0.000   0.000   0.000  1.00  1.00"
+                            if mDis == True:
+                                new_line = "ATOM  " + new_atom_num + " H    " + aa[oneletAA.index(char)] + "  " + new_res_num + "       0.000   0.000   0.000  1.00  1.00"
+                            else:
+                                new_line = "ATOM  " + new_atom_num + " CA   " + aa[oneletAA.index(char)] + "  " + new_res_num + "       0.000   0.000   0.000  1.00  1.00"
                             print(new_line)
                             insert_pdb.write(new_line + "\n")
                             start_res +=1

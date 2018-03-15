@@ -158,9 +158,10 @@ def insert_seq_renumb(insert_at, seq, filename, pdbname, mDis = False):
                     #print(res_pairs)
                 insert_pdb.write(line)
 
-def insert_seq_del_seq_renumb(insert_at, len_del, seq, filename, pdbname, mDis = False):
-    print(insert_at, insert_at+len_del)
+def insert_seq_del_seq_renumb(insert_at, seq, filename, pdbname, stop_at = 0, len_del = 0, byLength = True, mDis = False):
+    print(insert_at, insert_at+len_del, stop_at)
     insert_at = int(insert_at)
+    stop_at = int(stop_at)
     inserted = False
     check_lists = False
     res_pairs = {}
@@ -172,8 +173,7 @@ def insert_seq_del_seq_renumb(insert_at, len_del, seq, filename, pdbname, mDis =
         for line in orig_pdb:
             if "ATOM" in line:
                 if check_lists == True:
-                    continue
-                    
+                    continue 
                 elif int(line[22:26]) < insert_at - 1:
                     insert_pdb.write(line)
                 elif int(line[22:26]) == insert_at -1:
@@ -199,10 +199,27 @@ def insert_seq_del_seq_renumb(insert_at, len_del, seq, filename, pdbname, mDis =
                         inserted = True
                     else:
                         continue
-                elif int(line[22:26]) > insert_at and int(line[22:26])< insert_at+len_del: #the length of residues starting at insert point
+                elif byLength == True and int(line[22:26]) > insert_at and int(line[22:26])< insert_at+len_del: #the length of residues starting at insert point
+                    #print(line, "Being replaced")
                     continue
-                
-                elif int(line[22:26])== insert_at+len_del:
+                elif byLength == True and int(line[22:26])== insert_at+len_del:
+                    if line[12:16].strip() == "CA" or line[12:16].strip() == "C":
+                        atom1 = line[6:11]
+                        atom_num = int(line[6:11]) + len(seq)
+                        new_atom_num = (5-len(str(atom_num)))*" " + str(atom_num)
+                    
+                        res1 = (line[22:26])
+                        res_num = int(line[22:26]) + len(seq) - len_del
+                        new_res_num = (4-len(str(res_num)))*" " + str(res_num)
+                        if res1 not in res_pairs: res_pairs[res1] = new_res_num
+                        end_res = new_res_num
+                        insert_pdb.write(line[0:6] + new_atom_num + line[11:22] + new_res_num + line[26:])
+                elif byLength == False and int(line[22:26]) > insert_at and int(line[22:26]) <= stop_at: #the length of residues starting at insert point
+                    #print(line, "Being replaced by stopat")
+                    if line[12:16].strip() == "CA": len_del += 1
+                    continue
+                elif byLength == False and int(line[22:26])== stop_at+1:
+                    if line[12:16].strip() == "CA": len_del += 1
                     if line[12:16].strip() == "CA" or line[12:16].strip() == "C":
                         atom1 = line[6:11]
                         atom_num = int(line[6:11]) + len(seq)
@@ -217,7 +234,7 @@ def insert_seq_del_seq_renumb(insert_at, len_del, seq, filename, pdbname, mDis =
                     
                 elif check_lists == False: 
                     res1 = (line[22:26])
-                    res_num = int(line[22:26]) + len(seq) - len_del
+                    res_num = int(line[22:26]) + len(seq) - len_del                
                     new_res_num = (4-len(str(res_num)))*" " + str(res_num)
                     if res1 not in res_pairs: res_pairs[res1] = new_res_num
                     

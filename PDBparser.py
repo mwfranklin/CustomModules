@@ -425,7 +425,7 @@ def pdb_to_seq(pdb_file, chainID = "A"):
             #print(seq)
         else:    
             #print("No seq res")
-            if line[0:4] == "ATOM" and (line[12:16].strip() == "CA" or line[12:16].strip()=="CA1")and line[21] == chainID:
+            if line[0:4] == "ATOM" and (line[12:16].strip() == "CA" or line[12:16].strip()=="CA1") and line[21] == chainID:
                 seq_lines.append(line)
             elif line[0:6] == "HETATM" and line[12:16].strip() == "CA" and line[21] == chainID and line[17:20] in noncanAA:
                 seq_lines.append(line)

@@ -197,17 +197,17 @@ def align_seq(pdb1, pdb2, clustalW_path = "/Users/meghan/CompBioPrograms/Clustal
     pdb2_seq = pdb_to_seq(inFile, chainID2)
     pdb2_seq = textwrap.wrap(pdb2_seq, 50)
     
-    with open("%s_%sSeq.txt" %(pdb1, pdb2), "w+") as SeqFile:
+    with open("%s_%s_%s_%s_Seq.txt" %(pdb1, chainID1, pdb2, chainID2), "w+") as SeqFile:
         SeqFile.write(">" + pdb1+ "_" + chainID1 + "\n")
         SeqFile.write("\n".join(pdb1_seq) + "\n")
         SeqFile.write(">" + pdb2+ "_" + chainID2 + "\n")
         SeqFile.write("\n".join(pdb2_seq) + "\n")
 
-    clustalW = subprocess.check_output(["%s"%clustalW_path, "-INFILE=%s_%sSeq.txt" %(pdb1, pdb2), "-SCORE=PERCENT", "-STATS=%s_%sScore.txt"%(pdb1, pdb2)])
+    clustalW = subprocess.check_output(["%s"%clustalW_path, "-INFILE=%s_%s_%s_%s_Seq.txt" %(pdb1, chainID1, pdb2, chainID2), "-SCORE=PERCENT", "-STATS=%s_%sScore.txt"%(pdb1, pdb2)])
     
     pdb1_al_seq = []
     pdb2_al_seq = []
-    with open("%s_%sSeq.aln" %(pdb1, pdb2), "r") as aligned_seq:
+    with open("%s_%s_%s_%s_Seq.aln" %(pdb1, chainID1, pdb2, chainID2), "r") as aligned_seq:
         for line in aligned_seq:
             if pdb1 in line:
                 line = line.strip().split()
@@ -225,13 +225,15 @@ def align_seq(pdb1, pdb2, clustalW_path = "/Users/meghan/CompBioPrograms/Clustal
                 #print(line)
                 score = float(line.strip()[-5:].strip())
                 #print(score)
+            if "aln len" in line:
+                length = int(line.strip()[8:].strip())
     #print(pdb1_al_seq)
     #print(pdb2_al_seq)
-    os.system("rm %s_%sSeq.aln"%(pdb1, pdb2))
+    #os.system("rm %s_%s_%s_%s_Seq.aln"%(pdb1, chainID1, pdb2, chainID2))
     os.system("rm *.dnd")
     os.system("rm %s_%sScore.txt"%(pdb1, pdb2))
-    os.system("rm %s_%sSeq.txt"%(pdb1, pdb2))
-    return "".join(pdb1_al_seq), "".join(pdb2_al_seq), score
+    os.system("rm %s_%s_%s_%s_Seq.txt"%(pdb1, chainID1, pdb2, chainID2))
+    return "".join(pdb1_al_seq), "".join(pdb2_al_seq), score, length
     
 def get_POR(pdb1, pdb2):
     pdb1_seq, pdb2_seq = align_seq(pdb1, pdb2)

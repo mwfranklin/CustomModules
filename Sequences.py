@@ -189,9 +189,17 @@ def align_seq(pdb1, pdb2, clustalW_path = "/Users/meghan/CompBioPrograms/Clustal
     pdb1_seq = []
     pdb2_seq = []
     if fromFASTA == True:
-        with open("%s%s.fasta"%(DB_path, pdb1), "r") as inFile:
-            inFile = inFile.readlines()
-        for line in inFile:
+        with open("%s%s_%s.fasta"%(DB_path, pdb1, chainID1), "r") as inFile:
+            pdb_lines = inFile.readlines()
+        #print(pdb_lines)
+        for line in pdb_lines[1:]:
+            pdb1_seq.append(line.strip())
+        with open("%s%s_%s.fasta"%(DB_path, pdb2, chainID2), "r") as inFile:
+            pdb_lines = inFile.readlines()
+        #print(pdb_lines)
+        for line in pdb_lines[1:]:
+            pdb2_seq.append(line.strip())    
+        
     else:
         with open("%s%s.pdb"%(DB_path, pdb1), "r") as inFile:
             inFile = inFile.readlines()

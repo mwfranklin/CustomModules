@@ -185,17 +185,22 @@ def align_seq_perl(pdb1, pdb2):
     os.system("rm *.dnd")
     return pdb1_al_seq, pdb2_al_seq
     
-def align_seq(pdb1, pdb2, clustalW_path = "/Users/meghan/CompBioPrograms/ClustalW2/clustalw2", DB_path = "", chainID1="A", chainID2="A"):
+def align_seq(pdb1, pdb2, clustalW_path = "/Users/meghan/CompBioPrograms/ClustalW2/clustalw2", DB_path = "", chainID1="A", chainID2="A", fromFASTA = False):
     pdb1_seq = []
     pdb2_seq = []
-    with open("%s%s.pdb"%(DB_path, pdb1), "r") as inFile:
-        inFile = inFile.readlines()
-    pdb1_seq = pdb_to_seq(inFile, chainID1)
-    pdb1_seq = textwrap.wrap(pdb1_seq, 50)
-    with open("%s%s.pdb"%(DB_path, pdb2), "r") as inFile:
-        inFile = inFile.readlines()
-    pdb2_seq = pdb_to_seq(inFile, chainID2)
-    pdb2_seq = textwrap.wrap(pdb2_seq, 50)
+    if fromFASTA == True:
+        with open("%s%s.fasta"%(DB_path, pdb1), "r") as inFile:
+            inFile = inFile.readlines()
+        for line in inFile:
+    else:
+        with open("%s%s.pdb"%(DB_path, pdb1), "r") as inFile:
+            inFile = inFile.readlines()
+        pdb1_seq = pdb_to_seq(inFile, chainID1)
+        pdb1_seq = textwrap.wrap(pdb1_seq, 50)
+        with open("%s%s.pdb"%(DB_path, pdb2), "r") as inFile:
+            inFile = inFile.readlines()
+        pdb2_seq = pdb_to_seq(inFile, chainID2)
+        pdb2_seq = textwrap.wrap(pdb2_seq, 50)
     
     with open("%s_%sSeq.txt" %(pdb1, pdb2), "w+") as SeqFile:
         SeqFile.write(">" + pdb1+ "_" + chainID1 + "\n")

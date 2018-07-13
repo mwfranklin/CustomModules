@@ -192,6 +192,7 @@ def align_seq(pdb1, pdb2, clustalW_path = "/Users/meghan/CompBioPrograms/Clustal
         with open("%s%s.fasta"%(DB_path, pdb1), "r") as inFile:
             inFile = inFile.readlines()
         for line in inFile:
+            print("WHY DIDN'T I FINISH THIS FUNCTION")
     else:
         with open("%s%s.pdb"%(DB_path, pdb1), "r") as inFile:
             inFile = inFile.readlines()

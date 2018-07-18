@@ -199,7 +199,7 @@ def align_seq(pdb1, pdb2, clustalW_path = "/Users/meghan/CompBioPrograms/Clustal
         #print(pdb_lines)
         for line in pdb_lines[1:]:
             pdb2_seq.append(line.strip())    
-        
+
     else:
         with open("%s%s.pdb"%(DB_path, pdb1), "r") as inFile:
             inFile = inFile.readlines()

@@ -396,12 +396,15 @@ def clean_NMR(pdb_file, pdb1, het, NoH):
                 continue
     return True
        
-def get_res_numbers(pdb1):
+def get_res_numbers(pdb1, chainID = "A"):
     res_list = []
     with open("%s.pdb" %pdb1, "r") as pdb_file:
         for line in pdb_file:
-            if line[0:4] == "ATOM" and line[12:16].strip() == "CA":
+            if line[0:4] == "ATOM" and line[12:16].strip() == "CA"and line[21] == chainID:
                 res_list.append(line[22:26].strip())
+            elif line[0:6] == "HETATM" and line[12:16].strip() == "CA" and line[17:20] in noncanAA and line[21] == chainID:
+                res_list.append(line[22:26].strip())
+            elif "ENDMDL" in line: break
     return res_list
     
 def pdb_to_seq(pdb_file, chainID = "A"):

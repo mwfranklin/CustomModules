@@ -185,8 +185,8 @@ def draw_memb(pdb_name):
     cmd.show_as("cartoon", "%s"%pdb_name)
     cmd.select("mem", "resn MEM")
     cmd.select("emb", "resn EMB")
-    cmd.hide("everything", "mem")
-    cmd.hide("everything", "emb")
+    #cmd.hide("everything", "mem")
+    #cmd.hide("everything", "emb")
     cmd.alter("emb", "vdw=1.5")
     cmd.rebuild()
     """cmd.set_view (\
@@ -221,7 +221,8 @@ def draw_memb(pdb_name):
     	# compute normal vector, leaflet thickness is 15A
     	normal = subtract( normalp, center )
     	normal = normalize( normal, 15 )
-
+        print(normal)
+        
     	# get upper and lower center point along normal
     	upper_centerp = add( center, normal )
     	lower_centerp = subtract( center, normal )

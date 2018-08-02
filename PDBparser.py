@@ -236,7 +236,7 @@ def get_CA_coords(pdb, res_list = [], chainID = "A"):
                 if line[12:16].strip() == "CA" and line[21] == chainID:
                     res_coords.append([float(line[30:38]), float(line[38:46]), float(line[46:54])])
                     count +=1
-                    res_coords.extend(coord_line)
+                    #res_coords.extend(coord_line)
             res_coords = np.asarray(res_coords)
             #print(res_coords)
             res_coords = np.reshape(res_coords, (count, 3))

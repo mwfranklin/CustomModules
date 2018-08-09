@@ -39,10 +39,16 @@ def rotate_trans_coords(a, b, a_orig, b_orig, res_coord_array):
     #print(rot_mat)
     trans_vect = translation(np.asarray(np.dot(rot_mat, a))[0], a_orig )
     #print(trans_vect)
-
-    rotated_coords = np.zeros(np.shape(res_coord_array))
+    matrix_coords = np.transpose(res_coord_array)
+    matrix_rot = np.matmul(rot_mat, matrix_coords)
+    #print(matrix_rot)
+    
+    """rotated_coords = np.zeros(np.shape(res_coord_array))
     for x in range(0, len(res_coord_array)):
         rotated_coords[x] = np.dot(rot_mat, res_coord_array[x])
+    """
+    rotated_coords = np.transpose(matrix_rot)
+    print(rotated_coords)
     rotated_coords = rotated_coords - trans_vect
     return(rotated_coords)
 

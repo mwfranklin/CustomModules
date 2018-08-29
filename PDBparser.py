@@ -196,19 +196,12 @@ def set_all_phi_psi(residues, res_nums):
             residues[value].set_phi(residues[value-1])
             residues[value].set_psi(residues[value+1])
 
-def calc_RMSD(res_coords_native, res_coords_model):
-    if len(res_coords_model) != len(res_coords_native):
-        print("Uneven number of atoms")
-        return
-    rmsd = np.sqrt(np.sum((res_coords_native - res_coords_model)**2)/len(res_coords_native))
-    return rmsd
-            
 class Atom:
     def __init__(self, name, resnum, x, y, z):
         self.name = name
         self.resnum = int(resnum)
         self.coords = [float(x), float(y), float(z)]
-
+            
 def create_res(pdb):
     all_res = []
     res_nums = []
@@ -251,6 +244,118 @@ def create_res(pdb):
 
     return(all_res, res_nums, header)
 
+#functions to retrieve PDB files
+def download_pdbs(pdb_list, output_path = "", header_only = False):
+    #pdb_list should be a list of 4-digit PDB_IDs; if not, it gets converted to a list first
+    #if pdb_IDs aren't 4-digits: downloads pdb corresponding to first 4 digits - useful if you later need to extract a single chain
+    #output_path should include the final /; the default is the current directory
+    #header files can be retrieved with the optional flag header_only set to True
+    if isinstance(pdb_list, list) == False:
+        pdb_list = [pdb_list]
+    for entry in pdb_list:
+        print(entry)
+        if header_only == False:
+            #downloads PDB files and checks briefly; if there are less than 100 lines, the pdb is removed and the cif file retrieved instead
+            if os.path.isfile("%s%s.pdb"%(output_path, entry[0:4])) == False:
+                download_file(entry[0:4], output_path, "https://files.rcsb.org/download/")
+            else:
+                print("Already downloaded")
+        if header_only == True:
+            if os.path.isfile("%s%s.pdb"%(output_path, entry[0:4])) == False:
+                download_file(entry[0:4], output_path, "https://files.rcsb.org/header/")
+            else:
+                print("Already downloaded header")
+
+def download_file(pdb, output_path, database_path):
+    os.system("curl %s/%s.pdb -o %s%s.pdb" %(database_path, pdb, output_path, pdb))
+    with open("%s%s.pdb"%(output_path, pdb), "r") as inData:
+        inData = inData.readlines()
+    if len(inData) < 20:
+        print("This is too big to be in pdb format!!")
+        os.system("rm %s%s.pdb"%(output_path, pdb))
+        if os.path.isfile("%s%s.cif"%(output_path, pdb)) == False:
+            os.system( "curl %s%s.cif -o %s%s.cif" %(database_path, pdb, output_path, pdb) )
+
+#functions to clean up PDBs; esp useful for working with Rosetta < version 3.7    
+def remove_H(pdb1):
+    with open("%s.pdb" %pdb1, "r") as origPDB:
+        pdb_lines = origPDB.readlines()
+    
+    with open("%s.pdb" %pdb1, "w+") as new_PDB:
+        for line in pdb_lines:
+            if line[76:78].strip() != "H": new_PDB.write(line)
+
+def remove_het(pdb1):
+     with open("%s.pdb" %pdb1, "r") as origPDB:
+         pdb_lines = origPDB.readlines()
+    
+     with open("%s.pdb" %pdb1, "w+") as new_PDB:
+         for line in pdb_lines:
+             if line[0:6] != "HETATM": new_PDB.write(line)
+             
+def clean_pdb(pdb1, HET = False, NoH = True):
+    #This will remove any header info as well as any HET atoms by default. If Het is set to True, any HETATMs will be included in clean PDB
+    with open("%s.pdb" %pdb1, "r") as origPDB:
+        pdb_lines = origPDB.readlines()
+    print(pdb_lines[0])
+    with open("%s_clean.pdb" %pdb1, "w+") as newPDB:
+        finished = False
+        for line in pdb_lines:
+            if line[0:6] == "EXPDTA":
+                if "NMR" in line:
+                    print("NMR structure")
+                    finished = clean_NMR(pdb_lines, pdb1, HET, NoH)
+                    #print(finished)
+                else:
+                    print("Not NMR")
+                    finished = clean_xray(pdb_lines, pdb1, HET, NoH)
+            elif finished == True:
+                continue
+            else: continue
+            
+def clean_xray(pdb_file, pdb1, het, NoH):
+    with open("%s_clean.pdb" %pdb1, "w+") as newPDB:
+        for line in pdb_file:
+            if het == False:
+                if line[0:4] == "ATOM":
+                    if NoH == True and line[76:78].strip() != "H":
+                        newPDB.write(line)
+                    else:
+                        newPDB.write(line)
+            else:
+                if line[0:4] == "ATOM" or line[0:6] == "HETATM":
+                    if NoH == True and line[76:78].strip() != "H":
+                        newPDB.write(line)
+                    else:
+                        newPDB.write(line)
+    return True
+
+def clean_NMR(pdb_file, pdb1, het, NoH):
+    #Clean NMR will only keep the first model of 20
+    model = True
+    with open("%s_clean.pdb" %pdb1, "w+") as newPDB:
+        for line in pdb_file:
+            #print(line[0:6], model)
+            if line[0:6] == "ENDMDL":
+                model = False
+            elif model == True:
+                if het == False and line[0:4] == "ATOM":
+                    if NoH == True and line[76:78].strip() != "H":
+                        newPDB.write(line)
+                    else:
+                        newPDB.write(line)
+                elif het == True:
+                    if line[0:4] == "ATOM" or line[0:6] == "HETATM":
+                        if NoH == True and line[76:78].strip() != "H":
+                            newPDB.write(line)
+                        else:
+                            newPDB.write(line)
+                else: continue
+            else:
+                continue
+    return True
+    
+#miscellaneous, probably outdated functions relating to coordinates of PDBs; these are not written to be compatible with the class Protein but they probably should be
 def get_CA_coords(pdb, res_list = [], chainID = "A"):
     with open("%s.pdb" %pdb, "r") as coord_file:
         if len(res_list) > 0:
@@ -349,85 +454,7 @@ def get_res_centroids(pdb1, res_list = [], chainID = "A"):
             res_centroids = np.reshape(res_centroids, (res_count, 3))
 
     return res_centroids
-    
-def remove_H(pdb1):
-    with open("%s.pdb" %pdb1, "r") as origPDB:
-        pdb_lines = origPDB.readlines()
-    
-    with open("%s.pdb" %pdb1, "w+") as new_PDB:
-        for line in pdb_lines:
-            if line[76:78].strip() != "H": new_PDB.write(line)
 
-def remove_het(pdb1):
-     with open("%s.pdb" %pdb1, "r") as origPDB:
-         pdb_lines = origPDB.readlines()
-    
-     with open("%s.pdb" %pdb1, "w+") as new_PDB:
-         for line in pdb_lines:
-             if line[0:6] != "HETATM": new_PDB.write(line)
-             
-def clean_pdb(pdb1, HET = False, NoH = True):
-    #This will remove any header info as well as any HET atoms by default. If Het is set to True, any HETATMs will be included in clean PDB
-    with open("%s.pdb" %pdb1, "r") as origPDB:
-        pdb_lines = origPDB.readlines()
-    print(pdb_lines[0])
-    with open("%s_clean.pdb" %pdb1, "w+") as newPDB:
-        finished = False
-        for line in pdb_lines:
-            if line[0:6] == "EXPDTA":
-                if "NMR" in line:
-                    print("NMR structure")
-                    finished = clean_NMR(pdb_lines, pdb1, HET, NoH)
-                    #print(finished)
-                else:
-                    print("Not NMR")
-                    finished = clean_xray(pdb_lines, pdb1, HET, NoH)
-            elif finished == True:
-                continue
-            else: continue
-            
-def clean_xray(pdb_file, pdb1, het, NoH):
-    with open("%s_clean.pdb" %pdb1, "w+") as newPDB:
-        for line in pdb_file:
-            if het == False:
-                if line[0:4] == "ATOM":
-                    if NoH == True and line[76:78].strip() != "H":
-                        newPDB.write(line)
-                    else:
-                        newPDB.write(line)
-            else:
-                if line[0:4] == "ATOM" or line[0:6] == "HETATM":
-                    if NoH == True and line[76:78].strip() != "H":
-                        newPDB.write(line)
-                    else:
-                        newPDB.write(line)
-    return True
-
-def clean_NMR(pdb_file, pdb1, het, NoH):
-    #Clean NMR will only keep the first model of 20
-    model = True
-    with open("%s_clean.pdb" %pdb1, "w+") as newPDB:
-        for line in pdb_file:
-            #print(line[0:6], model)
-            if line[0:6] == "ENDMDL":
-                model = False
-            elif model == True:
-                if het == False and line[0:4] == "ATOM":
-                    if NoH == True and line[76:78].strip() != "H":
-                        newPDB.write(line)
-                    else:
-                        newPDB.write(line)
-                elif het == True:
-                    if line[0:4] == "ATOM" or line[0:6] == "HETATM":
-                        if NoH == True and line[76:78].strip() != "H":
-                            newPDB.write(line)
-                        else:
-                            newPDB.write(line)
-                else: continue
-            else:
-                continue
-    return True
-       
 def get_res_numbers(pdb1, chainID = "A"):
     res_list = []
     with open("%s.pdb" %pdb1, "r") as pdb_file:
@@ -438,4 +465,6 @@ def get_res_numbers(pdb1, chainID = "A"):
                 res_list.append(line[22:26].strip())
             elif "ENDMDL" in line: break
     return res_list
+
+
     

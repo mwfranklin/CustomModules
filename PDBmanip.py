@@ -84,6 +84,13 @@ def seq_from_struct(pdb_file, chainID = "A"):
     #print(seq)  
     return seq
 
+def calc_RMSD(res_coords_native, res_coords_model):
+    if len(res_coords_model) != len(res_coords_native):
+        print("Uneven number of atoms")
+        return
+    rmsd = np.sqrt(np.sum((res_coords_native - res_coords_model)**2)/len(res_coords_native))
+    return rmsd
+
 def one_chain_pdb(pdb_file, chainID = "A"):
     one_chain_lines = []
     for line in pdb_file:

@@ -91,16 +91,45 @@ def calc_RMSD(res_coords_native, res_coords_model):
     rmsd = np.sqrt(np.sum((res_coords_native - res_coords_model)**2)/len(res_coords_native))
     return rmsd
 
-def one_chain_pdb(pdb_file, chainID = "A"):
-    one_chain_lines = []
-    for line in pdb_file:
-        if line[0:4] == "ATOM" and line[21] == chainID:
-            one_chain_lines.append(line)
-        elif line[0:6] == "HETATM" and line[21] == chainID:
-            one_chain_lines.append(line)
-        elif line[0:3] == "TER" and line[21] == chainID:
-            one_chain_lines.append(line)
-    return one_chain_lines
+def one_chain_pdb(filename, pdb_id, chainID = "A", keep_header = True, remove_tags = True, inplace = True, outFile = "default"):
+    #pdb_file should be full filepath; pdb_id is 4-digit pdbID code, used for saving outFile
+    #chainID should be a valid letter/number that exists in the pdb
+    #keep_header == True will keep all lines before the ATOM lines
+    #remove_tags skips residues that have been marked as expression tag, purification tag, initiating methionine, initiating residue or leader seuqence in the SEQADV lines
+    #inplace will write over the original file; if this equals false, the default file path will be the same directory as the original, with PDB_Chain as the output file
+    with open(filename, "r") as orig_pdb:
+        orig_pdb = orig_pdb.readlines()
+    bad_res = []
+    if remove_tags == True:
+        tags = "EXPRESSION TAG", "PURIFICATION TAG", "INITIATING METHIONINE", "INITIATING RESIDUE", "LEADER SEQUENCE"
+        seq_adv = subprocess.check_output(["grep", "^SEQADV", filename])
+        seq_adv = seq_adv.decode("utf-8").strip().split("\n")
+
+        for line in seq_adv:
+            if line[49:].strip() in tags and line[16] == chainID:
+                bad_res.append(line[18:22].strip())
+    if inplace == True:
+        out_pdb = filename
+    else:
+        if outFile == "default":
+            out_pdb = "/".join(filename.split("/")[:-1])
+            out_pdb += "/%s_%s.pdb"%(pdb_id, chainID)
+        else:
+            out_pdb = outFile
+            
+    with open(out_pdb, "w+") as outData:
+        atoms_reached = False
+        for line in orig_pdb:
+            if atoms_reached == False and keep_header == True:
+                outData.write(line)
+            elif line[0:4] == "ATOM":
+                atoms_reached = True
+                if line[21] == chainID:
+                    outData.write(line)
+            elif line[0:6] == "HETATM" and line[21] == chainID:
+                outData.write(line)
+            elif line[0:3] == "TER" and line[21] == chainID:
+                outData.write(line)
 
 def renumber_pdb_contig(filename, start_value = 1, inplace = True):
     with open(filename, "r") as orig_pdb:

@@ -96,40 +96,57 @@ def one_chain_pdb(filename, pdb_id, chainID = "A", keep_header = True, remove_ta
     #chainID should be a valid letter/number that exists in the pdb
     #keep_header == True will keep all lines before the ATOM lines
     #remove_tags skips residues that have been marked as expression tag, purification tag, initiating methionine, initiating residue or leader seuqence in the SEQADV lines
-    #inplace will write over the original file; if this equals false, the default file path will be the same directory as the original, with PDB_Chain as the output file
-    with open(filename, "r") as orig_pdb:
-        orig_pdb = orig_pdb.readlines()
+    #inplace will write over the original file; if this equals false, the default file path will be the same directory as the original with PDB_Chain as the output file
+    
+    #identify residues with tags; 
     bad_res = []
     if remove_tags == True:
-        tags = "EXPRESSION TAG", "PURIFICATION TAG", "INITIATING METHIONINE", "INITIATING RESIDUE", "LEADER SEQUENCE"
-        seq_adv = subprocess.check_output(["grep", "^SEQADV", filename])
-        seq_adv = seq_adv.decode("utf-8").strip().split("\n")
-
-        for line in seq_adv:
-            if line[49:].strip() in tags and line[16] == chainID:
-                bad_res.append(line[18:22].strip())
+        bad_res = get_tag_IDs(filename, chainID)
+    
+    #determine where to save file
     if inplace == True:
         out_pdb = filename
     else:
         if outFile == "default":
-            out_pdb = "/".join(filename.split("/")[:-1])
-            out_pdb += "/%s_%s.pdb"%(pdb_id, chainID)
+            file_path = filename.split("/")[:-1]
+            #print(file_path)
+            if len(file_path) > 0: 
+                out_pdb = "/".join(file_path)
+                out_pdb += "/%s_%s.pdb"%(pdb_id, chainID)
+            else:
+                out_pdb = "%s_%s.pdb"%(pdb_id, chainID)
         else:
             out_pdb = outFile
-            
+    
+    #work through lines of file
+    with open(filename, "r") as orig_pdb:
+        orig_pdb = orig_pdb.readlines()        
     with open(out_pdb, "w+") as outData:
         atoms_reached = False
         for line in orig_pdb:
-            if atoms_reached == False and keep_header == True:
-                outData.write(line)
-            elif line[0:4] == "ATOM":
+            if line[0:4] == "ATOM":
                 atoms_reached = True
-                if line[21] == chainID:
+                if line[21] == chainID and line[22:26].strip() not in bad_res:
+                    #print(line[21], line)
                     outData.write(line)
             elif line[0:6] == "HETATM" and line[21] == chainID:
                 outData.write(line)
             elif line[0:3] == "TER" and line[21] == chainID:
                 outData.write(line)
+            elif atoms_reached == False and keep_header == True:
+                outData.write(line)
+
+def get_tag_resIDs(filename, chainID):
+    tags = ["EXPRESSION TAG", "PURIFICATION TAG", "INITIATING METHIONINE", "INITIATING RESIDUE", "LEADER SEQUENCE"]
+    seq_adv = subprocess.check_output(["grep", "^SEQADV", filename])
+    seq_adv = seq_adv.decode("utf-8").strip().split("\n")
+    #print(seq_adv)
+    for line in seq_adv:
+        #print(line[49:].strip(), line[16])
+        if line[49:].strip() in tags and line[16] == chainID:
+            bad_res.append(line[18:22].strip())
+    #print(bad_res)
+    return bad_res
 
 def renumber_pdb_contig(filename, start_value = 1, inplace = True):
     with open(filename, "r") as orig_pdb:

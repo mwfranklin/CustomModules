@@ -11,7 +11,7 @@ import PDBmanip as pdbm
 aa = ["ALA", "ARG", "ASN", "ASP", "CYS", "GLN", "GLU", "GLY", "HIS", "ILE", "LEU", "LYS", "MET", "PHE", "PRO", "SER", "THR", "TRP", "TYR", "VAL", "MSE", "SEC"]
 oneletAA = ["A", "R", "N", "D", "C", "Q", "E", "G", "H", "I", "L", "K", "M", "F", "P", "S", "T", "W", "Y", "V", "M", "C"]
 noncanAA = ["MSE", "IAS", "SEC"] #selenomethionene, L-asp acid for crosslinking, selenocysteine
-mod_res_list = ["ABA", "DDZ", 
+mod_res_list = ["ABA", "DDZ", #modified residues are generally noncanonical as well, but much less reconizable than simple swaps of S -> Se
                 "SSN", 
                 "BFD", "PHD", 
                 "CAF", "CAS", "CME", "CMH", "CSD", "CSO", "CSS", "CSX", "OCS", "QCS", "SMC", "SNC", "YCM", 
@@ -26,10 +26,10 @@ mod_res_list = ["ABA", "DDZ",
                 "TRX", "NIY",
                 "OTY", "PTR", "TY2",
                 "MVA"]
-mod_res_aa = ["A", "A", "N", "D", "D", "C", "C", "C", "C", "C", "C", "C", "C", "C","C","C", "C","C", 
+mod_res_aa = ["A", "A", "N", "D", "D", "C", "C", "C", "C", "C", "C", "C", "C", "C","C","C", "C","C", #this is the closest parent amino acid to the modified residue
             "Q", "H", "H", "H", "H", "H", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K", 
             "M", "M", "M", "M", "F", "P", "P", "P", "S", "T", "W", "W", "Y", "Y", "Y", "V"]
-#print(len(mod_res_list), len(mod_res_aa))
+chromophore_res = ["DYG", "CRQ", "CRG", "CRO", "GYS", "OFM", "CRG"]
 metals = ["CUA", "CU", "FE", "MG", "ZN", "MN"]
 header_delims = ["HEADER", "SEQRES", "HET   ", "HETNAM", "EXPDTA", "SOURCE", "COMPND", "TITLE ", "SEQADV", "MODRES"] #this should include other header start info of relevance with 6 characters
 
@@ -55,6 +55,7 @@ class Protein:
         self.gene_seq = {} #from SEQRES lines by chain
         self.chains = [] #sorted set of chains associated with residues
         self.mutated = False
+        self.chromophore = False
         self.modres = [] #res numbers of modified residues
         self.waters = [] #res numbers of waters; water does not get added to the coord list - don't want it for neighbor-finding purposes
         
@@ -67,6 +68,7 @@ class Protein:
             if x.type == "metal": self.metals.append(new_resnum)
             elif x.type == "water": self.waters.append(new_resnum)
             elif x.modres == True: self.modres.append(new_resnum)
+            elif x.type == "chromophore": self.chromophore = True
             
             if x.type != "water":
                 self.Coords.extend(x.Coords)
@@ -157,6 +159,8 @@ class Residue:
             self.type = "metal"
         elif self.name == "HOH":
             self.type = "water"
+        elif self.name in chromophore_res:
+            self.type = "chromophore"
         else:
             self.type = "protein"
             if self.name in mod_res_list:

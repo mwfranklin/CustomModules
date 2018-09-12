@@ -11,8 +11,27 @@ import PDBmanip as pdbm
 aa = ["ALA", "ARG", "ASN", "ASP", "CYS", "GLN", "GLU", "GLY", "HIS", "ILE", "LEU", "LYS", "MET", "PHE", "PRO", "SER", "THR", "TRP", "TYR", "VAL", "MSE", "SEC"]
 oneletAA = ["A", "R", "N", "D", "C", "Q", "E", "G", "H", "I", "L", "K", "M", "F", "P", "S", "T", "W", "Y", "V", "M", "C"]
 noncanAA = ["MSE", "IAS", "SEC"] #selenomethionene, L-asp acid for crosslinking, selenocysteine
-metals = ["CUA", "CU", "FE", "MG", "ZN"]
-header_delims = ["HEADER", "SEQRES", "HET   ", "HETNAM", "EXPDTA", "SOURCE", "COMPND", "TITLE "] #this should include other header start info of relevance with 6 characters
+mod_res_list = ["ABA", "DDZ", 
+                "SSN", 
+                "BFD", "PHD", 
+                "CAF", "CAS", "CME", "CMH", "CSD", "CSO", "CSS", "CSX", "OCS", "QCS", "SMC", "SNC", "YCM", 
+                "PCA",
+                "HIC", "HIP", "HS8", "NEP", "OHI",
+                "6CL", "ALY", "BTK", "FAK", "KCR", "KCX", "LLP", "M3L", "MLZ", "SLL",
+                "FME", "MHO", "MME", "MSO",
+                "PHA",
+                "05N", "HYP", "PXU",
+                "SEP", 
+                "TPO",
+                "TRX", "NIY",
+                "OTY", "PTR", "TY2",
+                "MVA"]
+mod_res_aa = ["A", "A", "N", "D", "D", "C", "C", "C", "C", "C", "C", "C", "C", "C","C","C", "C","C", 
+            "Q", "H", "H", "H", "H", "H", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K", 
+            "M", "M", "M", "M", "F", "P", "P", "P", "S", "T", "W", "W", "Y", "Y", "Y", "V"]
+#print(len(mod_res_list), len(mod_res_aa))
+metals = ["CUA", "CU", "FE", "MG", "ZN", "MN"]
+header_delims = ["HEADER", "SEQRES", "HET   ", "HETNAM", "EXPDTA", "SOURCE", "COMPND", "TITLE ", "SEQADV", "MODRES"] #this should include other header start info of relevance with 6 characters
 
 #a Protein is created by the following pair of calls:
 
@@ -36,17 +55,24 @@ class Protein:
         self.gene_seq = {} #from SEQRES lines by chain
         self.chains = [] #sorted set of chains associated with residues
         self.mutated = False
+        self.modres = [] #res numbers of modified residues
+        self.waters = [] #res numbers of waters; water does not get added to the coord list - don't want it for neighbor-finding purposes
         
         for x in res_list:
             self.sequence += x.onelet
             self.num_atoms += len(x.Atoms)
-            self.Coords.extend(x.Coords)
             new_resnum = str(x.resnum) + x.chain
             self.chains.append(x.chain)
             self.res_nums.append(new_resnum)
             if x.type == "metal": self.metals.append(new_resnum)
-            for atom in x.Atoms:
-                self.Coords_index.append(new_resnum)
+            elif x.type == "water": self.waters.append(new_resnum)
+            elif x.modres == True: self.modres.append(new_resnum)
+            
+            if x.type != "water":
+                self.Coords.extend(x.Coords)
+                for atom in x.Atoms:
+                    self.Coords_index.append(new_resnum)
+
         self.chains = sorted(set(self.chains))
         for x in self.chains:
             self.gene_seq[x] = ""
@@ -123,14 +149,25 @@ class Residue:
         self.name = name
         self.resnum = resnum #from PDB
         self.res_index = res_index #total count
+        self.modres = False
+        self.bfactors = []
+        self.occupancy = []
+        self.onelet = ""
         if self.name in metals:
             self.type = "metal"
+        elif self.name == "HOH":
+            self.type = "water"
         else:
             self.type = "protein"
-        try:
-            self.onelet = oneletAA[aa.index(self.name)]
-        except:
-            self.onelet = "X"
+            if self.name in mod_res_list:
+                self.modres = True
+                self.onelet = mod_res_aa[mod_res_list.index(self.name)]
+            else:
+                try:
+                    self.onelet = oneletAA[aa.index(self.name)]
+                except:
+                    self.onelet = "X"
+        
         self.chain = chain
         self.Atoms = []
         self.Coords = np.zeros((len(atom_list), 3))
@@ -143,6 +180,8 @@ class Residue:
             self.Coords[x][0] = float(atom_list[x][1])      
             self.Coords[x][1] = float(atom_list[x][2])
             self.Coords[x][2] = float(atom_list[x][3])
+            self.occupancy.extend(atom_list[x][4])
+            self.bfactors.extend(atom_list[x][5])
 
     def set_phi(self, prev_res):
         #phi is prevC-N-C-C
@@ -219,7 +258,7 @@ def create_res(pdb):
                 new_res = int(line[22:26])
                 #print(prev_res, resnum, len(res_atoms))
                 if prev_res == new_res:
-                    res_atoms.append([line[12:16].strip(), float(line[30:38]), float(line[38:46]), float(line[46:54])])
+                    res_atoms.append([line[12:16].strip(), float(line[30:38]), float(line[38:46]), float(line[46:54]), float(line[54:60]), float(line[60:66]) ])
                     #print(res_atoms)
                 else:
                     #print("atoms to append: ", len(res_atoms), name)
@@ -234,7 +273,7 @@ def create_res(pdb):
                     resnum = int(line[22:26])
                     name = line[17:20].strip()
                     chain = line[21]
-                    res_atoms.append([line[12:16].strip(), float(line[30:38]), float(line[38:46]), float(line[46:54])])
+                    res_atoms.append([line[12:16].strip(), float(line[30:38]), float(line[38:46]), float(line[46:54]), float(line[54:60]), float(line[60:66])])
             elif line[0:6] in header_delims:
                 header.append(line) 
             

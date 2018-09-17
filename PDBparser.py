@@ -86,15 +86,21 @@ class Protein:
                 #print(line)
                 for value in line[4:]:    
                     try:
+                        #print(value)
                         self.gene_seq[line[2]] += oneletAA[aa.index(value)]
                     except ValueError:
                         self.gene_seq[line[2]] += "X"
+                    except KeyError:
+                        continue
             if "MUTATION: YES" in line:
                 self.mutated = True
         
     def get_neighbor_res(self, atom_coords, r):
         neighbor_atoms = self.KDTree.query_ball_point(atom_coords, r)
-        neighbor_atoms = [y for x in neighbor_atoms for y in x]
+        if np.ndim(atom_coords) > 1: 
+            neighbor_atoms = [y for x in neighbor_atoms for y in x]
+        for x in neighbor_atoms:
+            print(self.Coords[x], self.Coords_index[x], np.sqrt(sum(np.square(atom_coords - self.Coords[x]))) )
         neighbor_res = [self.Coords_index[x] for x in neighbor_atoms]
         neighbor_res = sorted(set(neighbor_res))
         return neighbor_res
@@ -179,12 +185,13 @@ class Residue:
         self.phi = 500.00
         self.chi1 = 500.00   
         for x in range(0, len(atom_list)):
+            #print(atom_list[x])
             self.Atoms.append(atom_list[x][0])
-            self.Coords[x][0] = float(atom_list[x][1])      
-            self.Coords[x][1] = float(atom_list[x][2])
-            self.Coords[x][2] = float(atom_list[x][3])
-            self.occupancy.extend(atom_list[x][4])
-            self.bfactors.extend(atom_list[x][5])
+            self.Coords[x][0] = atom_list[x][1]
+            self.Coords[x][1] = atom_list[x][2]
+            self.Coords[x][2] = atom_list[x][3]
+            self.occupancy.append(atom_list[x][4])
+            self.bfactors.append(atom_list[x][5])
 
     def set_phi(self, prev_res):
         #phi is prevC-N-C-C
@@ -267,6 +274,7 @@ def create_res(pdb):
                     #print("atoms to append: ", len(res_atoms), name)
                     if len(res_atoms) > 0:
                         #print("atoms present")
+                        #print(res_atoms)
                         all_res.append(Residue(resnum, name, chain, res_atoms, res_index))
                         #print(resnum, name, chain, res_index)
                         res_nums.append(resnum)
@@ -280,7 +288,8 @@ def create_res(pdb):
             elif line[0:6] in header_delims:
                 header.append(line) 
             
-        if len(res_atoms) != 0: 
+        if len(res_atoms) != 0:
+            #print(res_atoms) 
             all_res.append(Residue(resnum, name, chain, res_atoms, res_index))
             res_nums.append(resnum)
 

@@ -101,7 +101,7 @@ def one_chain_pdb(filename, pdb_id, chainID = "A", keep_header = True, remove_ta
     #identify residues with tags; 
     bad_res = []
     if remove_tags == True:
-        bad_res = get_tag_IDs(filename, chainID)
+        bad_res = get_tag_resIDs(filename, chainID)
     
     #determine where to save file
     if inplace == True:
@@ -138,14 +138,20 @@ def one_chain_pdb(filename, pdb_id, chainID = "A", keep_header = True, remove_ta
 
 def get_tag_resIDs(filename, chainID):
     tags = ["EXPRESSION TAG", "PURIFICATION TAG", "INITIATING METHIONINE", "INITIATING RESIDUE", "LEADER SEQUENCE"]
-    seq_adv = subprocess.check_output(["grep", "^SEQADV", filename])
-    seq_adv = seq_adv.decode("utf-8").strip().split("\n")
-    #print(seq_adv)
-    for line in seq_adv:
-        #print(line[49:].strip(), line[16])
-        if line[49:].strip() in tags and line[16] == chainID:
-            bad_res.append(line[18:22].strip())
-    #print(bad_res)
+    try:
+        seq_adv = subprocess.check_output(["grep", "^SEQADV", filename])
+        seq_adv = seq_adv.decode("utf-8").strip().split("\n")
+        #print(seq_adv)
+        bad_res = []
+        for line in seq_adv:
+            #print(line[49:].strip(), line[16])
+            if line[49:].strip() in tags and line[16] == chainID:
+                bad_res.append(line[18:22].strip())
+        #print(bad_res)
+    except subprocess.CalledProcessError:
+        #print("No SEQADV lines")
+        bad_res = []
+        
     return bad_res
 
 def renumber_pdb_contig(filename, start_value = 1, inplace = True):

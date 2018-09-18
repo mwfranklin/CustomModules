@@ -99,8 +99,8 @@ class Protein:
         neighbor_atoms = self.KDTree.query_ball_point(atom_coords, r)
         if np.ndim(atom_coords) > 1: 
             neighbor_atoms = [y for x in neighbor_atoms for y in x]
-        for x in neighbor_atoms:
-            print(self.Coords[x], self.Coords_index[x], np.sqrt(sum(np.square(atom_coords - self.Coords[x]))) )
+        #for x in neighbor_atoms:
+            #print(self.Coords[x], self.Coords_index[x], np.sqrt(sum(np.square(atom_coords - self.Coords[x]))) )
         neighbor_res = [self.Coords_index[x] for x in neighbor_atoms]
         neighbor_res = sorted(set(neighbor_res))
         return neighbor_res

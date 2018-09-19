@@ -124,6 +124,9 @@ def one_chain_pdb(filename, pdb_id, chainID = "A", keep_header = True, remove_ta
     with open(out_pdb, "w+") as outData:
         atoms_reached = False
         for line in orig_pdb:
+            if line[0:6] == "ENDMDL":
+                break
+                
             if line[0:4] == "ATOM":
                 atoms_reached = True
                 if line[21] == chainID and line[22:26].strip() not in bad_res:

@@ -322,14 +322,14 @@ def ID_neighbors_perl(pdb1, target_res, cutoff):
     #print(vicinity_list)
     return(vicinity_list, chain)
             
-def align_seq(seq1, seq2, pdb1 = "pdb1", pdb2 = "pdb2"):
+def align_seq(seq1, seq2, pdb1 = "pdb1", pdb2 = "pdb2", clustalWpath = "/Users/meghan/CompBioPrograms/ClustalW2/clustalw2"):
     #there is a better version that is more customized in Sequences.py
     with open("%s_%sSeq.txt" %(pdb1, pdb2), "w+") as seq_file:
         seq_file.write(">" + pdb1 + "\n")
         seq_file.write(seq1 + "\n")
         seq_file.write(">" + pdb2 + "\n")
         seq_file.write(seq2 + "\n")
-    clustalW = subprocess.check_output(["/Users/meghan/ClustalW2/clustalw2", "-INFILE=%s_%sSeq.txt" %(pdb1, pdb2)])
+    clustalW = subprocess.check_output([clustalWpath, "-INFILE=%s_%sSeq.txt" %(pdb1, pdb2)])
     
     pdb1_al_seq = []
     pdb2_al_seq = []
@@ -350,6 +350,17 @@ def align_seq(seq1, seq2, pdb1 = "pdb1", pdb2 = "pdb2"):
     os.system("rm *.aln")
     os.system("rm *.dnd")
     return pdb1_al_seq, pdb2_al_seq
+
+def get_res_numbers(pdb1, chainID = "A"):
+    res_list = []
+    with open("%s.pdb" %pdb1, "r") as pdb_file:
+        for line in pdb_file:
+            if line[0:4] == "ATOM" and line[12:16].strip() == "CA"and line[21] == chainID:
+                res_list.append(line[22:26].strip())
+            elif line[0:6] == "HETATM" and line[12:16].strip() == "CA" and line[17:20] in aa and line[21] == chainID:
+                res_list.append(line[22:26].strip())
+            elif "ENDMDL" in line: break
+    return res_list
 
 def get_POR(pdb1, pdb2):
     pdb1_seq, pdb2_seq = align_seq(pdb1, pdb2)

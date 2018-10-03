@@ -505,17 +505,4 @@ def get_res_centroids(pdb1, res_list = [], chainID = "A"):
             res_centroids = np.reshape(res_centroids, (res_count, 3))
 
     return res_centroids
-
-def get_res_numbers(pdb1, chainID = "A"):
-    res_list = []
-    with open("%s.pdb" %pdb1, "r") as pdb_file:
-        for line in pdb_file:
-            if line[0:4] == "ATOM" and line[12:16].strip() == "CA"and line[21] == chainID:
-                res_list.append(line[22:26].strip())
-            elif line[0:6] == "HETATM" and line[12:16].strip() == "CA" and line[17:20] in aa and line[21] == chainID:
-                res_list.append(line[22:26].strip())
-            elif "ENDMDL" in line: break
-    return res_list
-
-
     

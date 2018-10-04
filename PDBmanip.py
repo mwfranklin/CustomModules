@@ -62,9 +62,10 @@ def seq_from_struct(pdb_file, chainID = "A"):
     for line in pdb_file:
         if line[0:4] == "ATOM" and line[12:16].strip() == "CA" and line[21] == chainID:
             seq_lines.append(line)
-        elif line[0:6] == "HETATM" and line[12:16].strip() == "CA" and line[21] == chainID and line[17:20] in noncanAA:
+        elif line[0:6] == "HETATM" and line[12:16].strip() == "CA" and line[21] == chainID:
             seq_lines.append(line)
-        elif "ENDMDL" in line: break
+        elif "ENDMDL" in line[0:6]: break
+        elif "TER" in line[0:3]: break
     #print(seq_lines)
         
     start_res = int(seq_lines[0][22:26]) - 1
@@ -153,6 +154,25 @@ def one_chain_pdb(filename, pdb_id, chainID = "A", keep_header = True, remove_ta
     if removed_res == True:
         print("Removed residues from SEQADV lines of", pdb_id, chainID)
 
+def one_chain_lines(orig_pdb_lines, chainID, multiple_occupancy = True):
+    if multiple_occupancy == False:
+        MO_codes = [" ", "A", 'B', 'C', 'D', 'E', '1', '2', '3', '4', '5']
+    else:
+        MO_codes = [" ", "A", "1"]
+        
+    keep_lines = []
+    for line in orig_pdb_lines:
+        if line[0:6] == "ENDMDL": #stop at the end of the first model for NMR structures
+            break        
+        if line[0:4] == "ATOM" and line[21] == chainID and line[16] in MO_codes:
+            keep_lines.append(line)
+        elif line[0:6] == "HETATM" and line[21] == chainID and line[16] in MO_codes:
+            keep_lines.append(line)
+        elif line[0:3] == "TER" and line[21] == chainID and line[16] in MO_codes:
+            keep_lines.append(line)
+    return keep_lines
+    
+
 def get_tag_resIDs(filename, chainID):
     tags = ["EXPRESSION TAG", "PURIFICATION TAG", "INITIATING METHIONINE", "INITIATING RESIDUE", "LEADER SEQUENCE"]
     try:
@@ -226,8 +246,9 @@ def renumber_pdb_inplace(pdb_file, start_value):
     adj_factor = 0
     for line in pdb_file:
         if "ANISOU" in line: continue
-        if line[0:4] == "ATOM":
+        if line[0:4] == "ATOM" or line[0:6] == "HETATM":
             if count == 0:
+                #print(line)
                 count +=1
                 old_start = int(line[22:26].strip()) 
                 adj_factor = start_value - old_start
@@ -241,7 +262,7 @@ def renumber_pdb_inplace(pdb_file, start_value):
                 new_lines.append(line[0:22] + new_res_num + line[26:])
         else:
             new_lines.append(line)
-    return new_lines
+    return(new_lines, adj_factor)
                                 
 def renumber_pdb_Rosetta(pdb_file, filename, start_value):
     #pdb_file is the readlines input
@@ -353,7 +374,7 @@ def align_seq(seq1, seq2, pdb1 = "pdb1", pdb2 = "pdb2", clustalWpath = "/Users/m
 
 def get_res_numbers(pdb1, chainID = "A"):
     res_list = []
-    with open("%s.pdb" %pdb1, "r") as pdb_file:
+    with open(pdb1, "r") as pdb_file:
         for line in pdb_file:
             if line[0:4] == "ATOM" and line[12:16].strip() == "CA"and line[21] == chainID:
                 res_list.append(line[22:26].strip())

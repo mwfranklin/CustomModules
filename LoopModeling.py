@@ -13,7 +13,7 @@ def model_same_seq(start_at, loop_size, filename, chainID, pdbname, mDis = False
     done_list = []
     with open(filename, "r") as orig_pdb, open("%s_UndefLoops.pdb" %pdbname, "w+") as insert_pdb:
         for line in orig_pdb:
-            if (("ATOM" in line[0:4] and line[21] == chainID) or (line[17:20] == "MSE" and line[21] == chainID)): 
+            if (("ATOM" in line[0:4] and line[21] == chainID) or (line[17:20] == "MSE" and line[21] == chainID) or ("HETATM" in line[0:6] and line[21] == chainID)): 
                 if (int(line[22:26]) < start_at or int(line[22:26]) > (start_at + loop_size -1)):
                     insert_pdb.write(line)
                 elif int(line[22:26]) == start_at:

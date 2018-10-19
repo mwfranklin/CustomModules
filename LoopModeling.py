@@ -276,7 +276,7 @@ def continuous_atoms(filename, pdbname):
     with open("%s_continuous.pdb" %pdbname, "w+") as insert_pdb:
         count = 0
         for line in orig_pdb:
-            if "ATOM" in line:
+            if "ATOM" in line[0:4] or "HETATM" in line[0:6]:
                 count +=1
                 atom1 = str(count)
                 new_atom_num = (5-len(str(atom1)))*" " + str(atom1)

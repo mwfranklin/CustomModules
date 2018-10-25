@@ -92,7 +92,7 @@ def calc_RMSD(res_coords_native, res_coords_model):
     rmsd = np.sqrt(np.sum((res_coords_native - res_coords_model)**2)/len(res_coords_native))
     return rmsd
 
-def one_chain_pdb(filename, pdb_id, chainID = "A", keep_header = True, remove_tags = True, multiple_occupancy = True, inplace = True, outFile = "default"):
+def one_chain_pdb(filename, pdb_id, chainID = "A", keep_header = True, remove_tags = True, remove_RosLink = False, multiple_occupancy = True, inplace = True, outFile = "default"):
     #pdb_file should be full filepath; pdb_id is 4-digit pdbID code, used for saving outFile
     #chainID should be a valid letter/number that exists in the pdb
     #keep_header == True will keep all lines before the ATOM lines
@@ -150,7 +150,10 @@ def one_chain_pdb(filename, pdb_id, chainID = "A", keep_header = True, remove_ta
             elif line[0:3] == "TER" and line[21] == chainID and line[16] in MO_codes:
                 outData.write(line)
             elif atoms_reached == False and keep_header == True:
-                outData.write(line)
+                if line[0:4] == "LINK" and remove_RosLink == True:
+                    outData.write("#" + line)
+                else:
+                    outData.write(line)
     if removed_res == True:
         print("Removed residues from SEQADV lines of", pdb_id, chainID)
 

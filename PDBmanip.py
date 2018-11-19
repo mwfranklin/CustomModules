@@ -7,8 +7,8 @@ import scipy.spatial
 import math
 import itertools
 
-aa = ["ALA", "ARG", "ASN", "ASP", "CYS", "GLN", "GLU", "GLY", "HIS", "ILE", "LEU", "LYS", "MET", "PHE", "PRO", "SER", "THR", "TRP", "TYR", "VAL", "MSE", "SEC"]
-oneletAA = ["A", "R", "N", "D", "C", "Q", "E", "G", "H", "I", "L", "K", "M", "F", "P", "S", "T", "W", "Y", "V", "M", "C"]
+aa = ["ALA", "ARG", "ASN", "ASP", "CYS", "GLN", "GLU", "GLY", "HIS", "ILE", "LEU", "LYS", "MET", "PHE", "PRO", "SER", "THR", "TRP", "TYR", "VAL", "MSE", "SEC", "CH6"]
+oneletAA = ["A", "R", "N", "D", "C", "Q", "E", "G", "H", "I", "L", "K", "M", "F", "P", "S", "T", "W", "Y", "V", "M", "C", "MYG"]
 noncanAA = ["MSE", "IAS", "SEC"] #selenomethionene, L-asp acid for crosslinking, selenocysteine
 metals = ["CUA", "CU", "FE", "MG", "ZN"]
 
@@ -62,6 +62,8 @@ def seq_from_struct(pdb_file, chainID = "A"):
     for line in pdb_file:
         if line[0:4] == "ATOM" and line[12:16].strip() == "CA" and line[21] == chainID:
             seq_lines.append(line)
+        elif line[0:4] == "ATOM" and line[12:16].strip() == "CA1" and line[21] == chainID:
+            seq_lines.append(line)
         elif line[0:6] == "HETATM" and line[12:16].strip() == "CA" and line[21] == chainID:
             seq_lines.append(line)
         elif "ENDMDL" in line[0:6]: break
@@ -76,6 +78,8 @@ def seq_from_struct(pdb_file, chainID = "A"):
         elif curr_res != start_res + 1:
             seq += ("-"* (curr_res - start_res - 1))
             #print(seq, start_res, curr_res)
+        
+        #print(oneletAA[aa.index(row[17:20])])
         try:
             seq += oneletAA[aa.index(row[17:20])]
         except ValueError:

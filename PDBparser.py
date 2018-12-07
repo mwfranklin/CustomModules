@@ -318,14 +318,17 @@ def download_pdbs(pdb_list, output_path = "", header_only = False):
                 print("Already downloaded header")
 
 def download_file(pdb, output_path, database_path):
-    os.system("curl %s/%s.pdb -o %s%s.pdb" %(database_path, pdb, output_path, pdb))
-    with open("%s%s.pdb"%(output_path, pdb), "r") as inData:
-        inData = inData.readlines()
-    if len(inData) < 20:
-        print("This is too big to be in pdb format!!")
-        os.system("rm %s%s.pdb"%(output_path, pdb))
-        if os.path.isfile("%s%s.cif"%(output_path, pdb)) == False:
-            os.system( "curl %s%s.cif -o %s%s.cif" %(database_path, pdb, output_path, pdb) )
+    if os.path.isfile("%s%s.cif"%(output_path, pdb)) == True:
+        print("Already downloaded CIF file")
+    else:
+        os.system("curl %s/%s.pdb -o %s%s.pdb" %(database_path, pdb, output_path, pdb))
+        with open("%s%s.pdb"%(output_path, pdb), "r") as inData:
+            inData = inData.readlines()
+        if len(inData) < 20:
+            print("This is too big to be in pdb format!!")
+            os.system("rm %s%s.pdb"%(output_path, pdb))
+            if os.path.isfile("%s%s.cif"%(output_path, pdb)) == False:
+                os.system( "curl %s%s.cif -o %s%s.cif" %(database_path, pdb, output_path, pdb) )
 
 #functions to clean up PDBs; esp useful for working with Rosetta < version 3.7    
 def remove_H(pdb1):

@@ -93,11 +93,14 @@ def pdb_to_seq(pdb_file, chainID = "A"):
             #print(line)
             if line[2] == chainID:
                 #seq_line = [oneletAA[aa.index(value)] for value in line[4:]]
-                for value in line[4:]:    
-                    try:
-                        seq += oneletAA[aa.index(value)]
-                    except ValueError:
-                        seq += "X"
+                for value in line[4:]:
+                    if len(value) == 1:
+                        return "NUC-CONTAINGING SEQUENCE"
+                    else:    
+                        try:
+                            seq += oneletAA[aa.index(value)]
+                        except ValueError:
+                            seq += "X"
                 #seq_line = "".join(seq_line)
                 #seq += seq_line
             #print(seq)
@@ -204,10 +207,15 @@ def align_seq(pdb1, pdb2, clustalW_path = "/Users/meghan/CompBioPrograms/Clustal
         with open("%s%s.pdb"%(DB_path, pdb1), "r") as inFile:
             inFile = inFile.readlines()
         pdb1_seq = pdb_to_seq(inFile, chainID1)
+        if pdb1_seq == "NUC-CONTAINGING SEQUENCE": 
+            return("NUCLEOTIDES IN 1")
         pdb1_seq = textwrap.wrap(pdb1_seq, 50)
+
         with open("%s%s.pdb"%(DB_path, pdb2), "r") as inFile:
             inFile = inFile.readlines()
         pdb2_seq = pdb_to_seq(inFile, chainID2)
+        if pdb2_seq == "NUC-CONTAINGING SEQUENCE": 
+            return("NUCLEOTIDES IN 2")
         pdb2_seq = textwrap.wrap(pdb2_seq, 50)
     
     with open("%s_%s_%s_%s_Seq.txt" %(pdb1, chainID1, pdb2, chainID2), "w+") as SeqFile:

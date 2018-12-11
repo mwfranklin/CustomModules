@@ -97,7 +97,7 @@ def calc_RMSD(res_coords_native, res_coords_model):
     return rmsd
 
 def one_chain_pdb(filename, pdb_id, chainID = "A", keep_header = True, remove_tags = True, remove_RosLink = False, multiple_occupancy = True, inplace = True, outFile = "default"):
-    #pdb_file should be full filepath; pdb_id is 4-digit pdbID code, used for saving outFile
+    #filename should be full filepath; pdb_id is 4-digit pdbID code, used for saving outFile
     #chainID should be a valid letter/number that exists in the pdb
     #keep_header == True will keep all lines before the ATOM lines
     #remove_tags skips residues that have been marked as expression tag, purification tag, initiating methionine, initiating residue or leader seuqence in the SEQADV lines

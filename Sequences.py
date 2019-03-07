@@ -68,6 +68,32 @@ bbTM = np.array([
 all_matrices_names = ["BLOSUM62", "bbTM"]
 all_matrices = [blosum62, bbTM]
 
+def read_fasta_file(filename):
+    #this reads a fasta file (which must have > at the beginning of new sequences) and returns a list of lists
+    #each entry in the fasta file is represented in the list as [identifier, list of other descriptors, sequence]
+    fasta_seqs = []
+    with open(filename, "r") as inData:
+        seq = ""
+        identifier = ""
+        other_descriptors = ""
+        for line in inData:
+            if line.startswith(">"):
+                if len(seq) > 0:
+                    #hit a new seq, so add old seq to list
+                    fasta_seqs.append([identifier, other_descriptors, seq])
+                    seq = ""
+                    identifier = ""
+                    other_descriptors = ""
+                #start fresh
+                line = line.split("|")
+                identifier = line[0][1:]
+                other_descriptors = line[1:]
+            else:
+                seq += line.strip()
+    fasta_seqs.append([identifier, other_descriptors, seq])
+    return(fasta_seqs)
+                
+
 def calc_sim_score(seq1, seq2, matrix="BLOSUM62", gap_pen = -1):
     score= 0
     if matrix != "BLOSUM62": matrix = all_matrices[all_matrices_names.index(matrix)]

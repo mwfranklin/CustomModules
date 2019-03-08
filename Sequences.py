@@ -160,9 +160,12 @@ def seq_from_struct(pdb_file, chainID = "A"):
     for line in pdb_file:
         if line[0:4] == "ATOM" and line[12:16].strip() == "CA" and line[21] == chainID:
             seq_lines.append(line)
-        elif line[0:6] == "HETATM" and line[12:16].strip() == "CA" and line[21] == chainID and line[17:20] in noncanAA:
+        elif line[0:4] == "ATOM" and line[12:16].strip() == "CA1" and line[21] == chainID:
             seq_lines.append(line)
-        elif "ENDMDL" in line: break
+        elif line[0:6] == "HETATM" and line[12:16].strip() == "CA" and line[21] == chainID:
+            seq_lines.append(line)
+        elif "ENDMDL" in line[0:6]: break
+        elif "TER" in line[0:3]: break
     #print(seq_lines)
         
     start_res = int(seq_lines[0][22:26]) - 1
@@ -173,6 +176,8 @@ def seq_from_struct(pdb_file, chainID = "A"):
         elif curr_res != start_res + 1:
             seq += ("-"* (curr_res - start_res - 1))
             #print(seq, start_res, curr_res)
+        
+        #print(oneletAA[aa.index(row[17:20])])
         try:
             seq += oneletAA[aa.index(row[17:20])]
         except ValueError:

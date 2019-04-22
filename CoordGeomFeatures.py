@@ -66,19 +66,21 @@ def get_orig_charge(metal, filename):
     try:
         this_charge = subprocess.check_output(["grep", "^FORMUL", filename])
         this_charge = this_charge.decode("utf-8").strip().split("\n")
-        #print(this_charge)
+        print(this_charge)
         for line in this_charge: 
-            #print(line)
+            print(line)
             if metal in line[12:15]: #this won't work for res code C2O, but it already ran by the time I troubleshooted this!
-                if line[19].isdigit():
-                    charge = line.replace(")", "(").split("(")[1][3:].strip()
-                else:
-                    charge = line[21:25].strip()
-                #print(charge)
-                this_charge = int(charge[0])
-                if charge[-1] == "-": this_charge * -1
-                break
-        return(this_charge)
+                try:
+                    if line[19].isdigit():
+                        charge = line.replace(")", "(").split("(")[1][3:].strip()
+                    else:
+                        charge = line[21:25].strip()
+                    #print(charge)
+                    this_charge = int(charge[0])
+                    if charge[-1] == "-": this_charge * -1
+                    return(this_charge)
+                except ValueError: #for res codes like MGF, FES, etc with covalent bonds and therefore no ionic charge any more
+                    return(9)
     except subprocess.CalledProcessError:
         return(9)
 

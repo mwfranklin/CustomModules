@@ -68,7 +68,7 @@ def get_orig_charge(metal, filename):
         this_charge = this_charge.decode("utf-8").strip().split("\n")
         #print(this_charge)
         for line in this_charge: 
-            print(line)
+            #print(line)
             if metal in line[12:15]: #this won't work for res code C2O, but it already ran by the time I troubleshooted this!
                 try:
                     if line[19].isdigit():
@@ -101,7 +101,7 @@ def bond_valences(ligands, coords, metal, charge, bond_params):
         else:
             this_ligand = this_ligand      
         this_dist = distances[x]
-        print(this_ligand, this_dist)
+        #print(this_ligand, this_dist)
         #print(bond_params[(bond_params.Metal.str.upper() == metal) & (bond_params.Charge == charge) & (bond_params.CoordAtom == this_ligand)] )
         try:
             this_param = bond_params[(bond_params.Metal.str.upper() == metal) & (bond_params.Charge == charge) & (bond_params.CoordAtom == this_ligand)].values[0]

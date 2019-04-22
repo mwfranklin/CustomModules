@@ -148,7 +148,7 @@ def calc_cmm_params(metal_name, geom_name, pdb_id):
         nVESCUM = 1000
     #print(these_ligands, gRMSD, valence, nVESCUM)    
     cmm_params = these_ligands.tolist()
-    cmm_params.extend([gRMSD, max_dev, valence, nVESCUM])
+    cmm_params.extend([this_charge, gRMSD, max_dev, valence, nVESCUM])
     #print(cmm_params)
     cmm_params = "\t".join(map(str, cmm_params))
     return(cmm_params)

@@ -85,7 +85,7 @@ def read_fasta_file(filename):
                     identifier = ""
                     other_descriptors = ""
                 #start fresh
-                line = line.split("|")
+                line = line.strip().split("|")
                 identifier = line[0][1:]
                 other_descriptors = line[1:]
             else:

@@ -68,6 +68,32 @@ bbTM = np.array([
 all_matrices_names = ["BLOSUM62", "bbTM"]
 all_matrices = [blosum62, bbTM]
 
+def read_fasta_file(filename):
+    #this reads a fasta file (which must have > at the beginning of new sequences) and returns a list of lists
+    #each entry in the fasta file is represented in the list as [identifier, list of other descriptors, sequence]
+    fasta_seqs = []
+    with open(filename, "r") as inData:
+        seq = ""
+        identifier = ""
+        other_descriptors = ""
+        for line in inData:
+            if line.startswith(">"):
+                if len(seq) > 0:
+                    #hit a new seq, so add old seq to list
+                    fasta_seqs.append([identifier, other_descriptors, seq])
+                    seq = ""
+                    identifier = ""
+                    other_descriptors = ""
+                #start fresh
+                line = line.split("|")
+                identifier = line[0][1:]
+                other_descriptors = line[1:]
+            else:
+                seq += line.strip()
+    fasta_seqs.append([identifier, other_descriptors, seq])
+    return(fasta_seqs)
+                
+
 def calc_sim_score(seq1, seq2, matrix="BLOSUM62", gap_pen = -1):
     score= 0
     if matrix != "BLOSUM62": matrix = all_matrices[all_matrices_names.index(matrix)]
@@ -134,9 +160,12 @@ def seq_from_struct(pdb_file, chainID = "A"):
     for line in pdb_file:
         if line[0:4] == "ATOM" and line[12:16].strip() == "CA" and line[21] == chainID:
             seq_lines.append(line)
-        elif line[0:6] == "HETATM" and line[12:16].strip() == "CA" and line[21] == chainID and line[17:20] in noncanAA:
+        elif line[0:4] == "ATOM" and line[12:16].strip() == "CA1" and line[21] == chainID:
             seq_lines.append(line)
-        elif "ENDMDL" in line: break
+        elif line[0:6] == "HETATM" and line[12:16].strip() == "CA" and line[21] == chainID:
+            seq_lines.append(line)
+        elif "ENDMDL" in line[0:6]: break
+        elif "TER" in line[0:3]: break
     #print(seq_lines)
         
     start_res = int(seq_lines[0][22:26]) - 1
@@ -147,6 +176,8 @@ def seq_from_struct(pdb_file, chainID = "A"):
         elif curr_res != start_res + 1:
             seq += ("-"* (curr_res - start_res - 1))
             #print(seq, start_res, curr_res)
+        
+        #print(oneletAA[aa.index(row[17:20])])
         try:
             seq += oneletAA[aa.index(row[17:20])]
         except ValueError:

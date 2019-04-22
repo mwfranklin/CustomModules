@@ -68,13 +68,13 @@ def get_orig_charge(metal, filename):
         this_charge = this_charge.decode("utf-8").strip().split("\n")
         #print(this_charge)
         for line in this_charge: 
-            #print(line)
-            if metal in line:
+            print(line)
+            if metal in line[12:15]: #this won't work for res code C2O, but it already ran by the time I troubleshooted this!
                 if line[19].isdigit():
                     charge = line.replace(")", "(").split("(")[1][3:].strip()
                 else:
                     charge = line[21:25].strip()
-                #print(charge)
+                print(charge)
                 this_charge = int(charge[0])
                 if charge[-1] == "-": this_charge * -1
                 break
@@ -97,11 +97,14 @@ def bond_valences(ligands, coords, metal, charge, bond_params):
         else:
             this_ligand = this_ligand      
         this_dist = distances[x]
-        #print(this_ligand, this_dist)
-        this_param = bond_params[(bond_params.Metal.str.upper() == metal) & (bond_params.Charge == charge) & (bond_params.CoordAtom == this_ligand)].values[0]
+        print(this_ligand, this_dist)
+        print(bond_params[(bond_params.Metal.str.upper() == metal) & (bond_params.Charge == charge) & (bond_params.CoordAtom == this_ligand)] )
+        try:
+            this_param = bond_params[(bond_params.Metal.str.upper() == metal) & (bond_params.Charge == charge) & (bond_params.CoordAtom == this_ligand)].values[0]
+        except IndexError: #a charge of 9 is code for "all" or "unknown" so it is more likely to find the correct metal:coord atom pair
+            this_param = bond_params[(bond_params.Metal.str.upper() == metal) & (bond_params.Charge == 9) & (bond_params.CoordAtom == this_ligand)].values[0]
         r0 = this_param[4]
         b = this_param[5]
-        #print(bond_params[(bond_params.Metal.str.upper() == metal) & (bond_params.Charge == charge) & (bond_params.CoordAtom == this_ligand)] )
         #print(r0, b)
         if r0 is np.nan: #if one is np.nan then both r0 and b will be undefined
             print("Check this metal:", metal, charge, ligands)

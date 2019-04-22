@@ -47,7 +47,7 @@ def angle_rmsd(folder_name, geom_id):
         template_coords.append([ float(entry[30:38].strip()), float(entry[38:46].strip()) , float(entry[46:54].strip())])
     template_coords = np.asarray(template_coords)
     template_angles = angles(template_coords)
-    print(template_angles)
+    #print(template_angles)
     
     ligand_coords = []
     ligand_ids = []
@@ -58,7 +58,7 @@ def angle_rmsd(folder_name, geom_id):
         ligand_ids.append(str(entry[12:16].strip()))
     ligand_coords = np.asarray(ligand_coords)
     ligand_angles = angles(ligand_coords)
-    print(ligand_angles)
+    #print(ligand_angles)
     
     return np.sum( np.abs(np.asarray(template_angles) - np.asarray(ligand_angles)) ), np.max( np.abs(np.asarray(template_angles) - np.asarray(ligand_angles)) ), ligand_ids, ligand_coords #calculate the difference between each pair of corresponding angles and add up differences    
 

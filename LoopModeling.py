@@ -251,7 +251,7 @@ def process_PETALS(filename):
     scores = subprocess.check_output(["grep", "^LOOP", filename])
     scores = scores.decode("utf-8").strip().split("\n")
     scores = [x.split()[1:] for x in scores]
-    scores = pandas.DataFrame.from_records(scores, columns = ("ModelNum", "dfire", "oscar", "dis", "bb"))
+    scores = pandas.DataFrame.from_records(scores, columns = ("ModelNum", "dfire", "oscar", "dis", "bb"), coerce_float = True)
     scores.to_csv(filename[:-4] + "_Scores.txt", sep = "\t", index = False)
                     
     with open(filename, "r") as inData:

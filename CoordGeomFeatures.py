@@ -132,7 +132,7 @@ def bond_valences(ligands, coords, metal, charge, bond_params):
 def vescum(coords, bond_valence):
     return(np.linalg.norm(coords.sum(axis = 0))/bond_valence)
     
-def calc_cmm_params(metal_name, geom_name, pdb_id):
+def calc_cmm_params(metal_name, geom_name, pdb_id, out_directory):
     good_metals = ["CU", "CO", "FE", "MN", "MG", "MO", "NI", "ZN"]
     if metal_name[0:2] not in good_metals:
         return(0)
@@ -142,7 +142,7 @@ def calc_cmm_params(metal_name, geom_name, pdb_id):
         these_ligands = ligands(metal_name, geom_name)
         #print(ligand_ids, ligand_coords) 
     else:
-        aligned_pdbs = glob.glob("%s/*.out"%metal_name)
+        aligned_pdbs = glob.glob("%s%s/*.out"%(out_directory, metal_name))
         aligned_pdbs = [ x.split("/")[-1][:-4] for x in aligned_pdbs ]
         if aligned_pdbs[0] != "findgeo":
             new_geom = aligned_pdbs[0]

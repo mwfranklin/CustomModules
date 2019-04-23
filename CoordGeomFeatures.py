@@ -4,9 +4,9 @@ import numpy as np
 import pandas as pd
 import glob
 
-def ligands(folder_name, geom_id):
+def ligands(folder_name, geom_id, out_dir):
     ligands = np.zeros(4) #N, O, S, other
-    ligand_lines = subprocess.check_output(["sed", "-e", "1,/TER/d", "%s/%s.pdb"%(folder_name, geom_id)])
+    ligand_lines = subprocess.check_output(["sed", "-e", "1,/TER/d", "%s%s/%s.pdb"%(out_dir, folder_name, geom_id)])
     ligand_lines = ligand_lines.decode("utf-8").strip().split("\n")[1:]
     #print(ligand_lines)
     for line in ligand_lines:
@@ -35,12 +35,12 @@ def angles(rotated_matrix):
             these_angles.append( np.degrees(np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))) )
     return(these_angles)
     
-def angle_rmsd(folder_name, geom_id):
+def angle_rmsd(folder_name, geom_id, out_dir):
     #the [geom_id]_orig.pdb files contain the site that has already been rotated and aligned with the template
     #therefore, by calculating the angles in the same order, we can guarantee that the angles are corresponding
     #we can also grab the actual coords to use for calculating valence and nVESCUM later
     angle_rmsd = 0
-    template_lines = subprocess.check_output(["sed", "-e", "/TER/,$d", "%s/%s_orig.pdb"%(folder_name, geom_id)])
+    template_lines = subprocess.check_output(["sed", "-e", "/TER/,$d", "%s%s/%s_orig.pdb"%(out_dir, folder_name, geom_id)])
     template_lines = template_lines.decode("utf-8").strip().split("\n")[1:] #fist line will have coords of [0,0,0]
     template_coords = []
     for entry in template_lines:
@@ -51,7 +51,7 @@ def angle_rmsd(folder_name, geom_id):
     
     ligand_coords = []
     ligand_ids = []
-    ligand_lines = subprocess.check_output(["sed", "-e", "1,/TER/d", "%s/%s_orig.pdb"%(folder_name, geom_id)])
+    ligand_lines = subprocess.check_output(["sed", "-e", "1,/TER/d", "%s%s/%s_orig.pdb"%(out_dir, folder_name, geom_id)])
     ligand_lines = ligand_lines.decode("utf-8").strip().split("\n")[1:] #fist line will have coords of [0,0,0]
     for entry in ligand_lines:
         ligand_coords.append([ float(entry[30:38].strip()), float(entry[38:46].strip()) , float(entry[46:54].strip())])
@@ -138,8 +138,8 @@ def calc_cmm_params(metal_name, geom_name, pdb_id, out_directory):
         return(0)
         
     if geom_name != "Irr":
-        gRMSD, max_dev, ligand_ids, ligand_coords = angle_rmsd(metal_name, geom_name)
-        these_ligands = ligands(metal_name, geom_name)
+        gRMSD, max_dev, ligand_ids, ligand_coords = angle_rmsd(metal_name, geom_name, out_directory)
+        these_ligands = ligands(metal_name, geom_name, out_directory)
         #print(ligand_ids, ligand_coords) 
     else:
         aligned_pdbs = glob.glob("%s%s/*.out"%(out_directory, metal_name))
@@ -149,14 +149,14 @@ def calc_cmm_params(metal_name, geom_name, pdb_id, out_directory):
         else:
             new_geom = aligned_pdbs[1]
         #print("Fake geom use:", new_geom)
-        gRMSD, max_dev, ligand_ids, ligand_coords = angle_rmsd(metal_name, new_geom)
-        these_ligands = ligands(metal_name, new_geom)
+        gRMSD, max_dev, ligand_ids, ligand_coords = angle_rmsd(metal_name, new_geom, out_directory)
+        these_ligands = ligands(metal_name, new_geom, out_directory)
         #print(ligand_ids, ligand_coords)
         gRMSD = 1000
         max_dev = 1000
                 
     bond_params = pd.read_csv("/panfs/pfs.local/work/sluskylab/MSEAL/data/MetalParamsFiltered.txt", header = 0)
-    this_charge = get_orig_charge(metal_name[0:2], "%s.pdb"%pdb_id)
+    this_charge = get_orig_charge(metal_name[0:2], "%s%s.pdb"%(out_directory, pdb_id)
     #print(this_charge, ligand_ids, ligand_coords)
     valence = bond_valences(ligand_ids, ligand_coords, metal_name[0:2], this_charge, bond_params)
     #print(valence)

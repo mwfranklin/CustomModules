@@ -106,11 +106,9 @@ def bond_valences(ligands, coords, metal, charge, bond_params):
         try:
             this_param = bond_params[(bond_params.Metal.str.upper() == metal) & (bond_params.Charge == charge) & (bond_params.CoordAtom.str.upper() == this_ligand)].values[0]
         except IndexError: #a charge of 9 is code for "all" or "unknown" so it is more likely to find the correct metal:coord atom pair
-            if metal == "MG": #Mg can only have a charge of +2
-                this_param = bond_params[(bond_params.Metal.str.upper() == metal) & (bond_params.Charge == 2) & (bond_params.CoordAtom == "As")].values[0]
-            elif metal == "CU":
-                this_param = bond_params[(bond_params.Metal.str.upper() == metal) & (bond_params.Charge == 2) & (bond_params.CoordAtom.str.upper() == this_ligand)].values[0]
-            else:
+            try:
+                this_param = bond_params[(bond_params.Metal.str.upper() == metal) & (bond_params.Charge == charge) & (bond_params.CoordAtom == "As")].values[0]
+            except IndexError:
                 try:
                     this_param = bond_params[(bond_params.Metal.str.upper() == metal) & (bond_params.Charge == 9) & (bond_params.CoordAtom.str.upper() == this_ligand)].values[0]
                 except IndexError:

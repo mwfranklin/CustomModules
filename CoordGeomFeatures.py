@@ -66,7 +66,7 @@ def get_orig_charge(metal, filename):
     try:
         this_charge = subprocess.check_output(["grep", "^FORMUL", filename])
         this_charge = this_charge.decode("utf-8").strip().split("\n")
-        #print(this_charge)
+        print(this_charge)
         for line in this_charge: 
             #print(line)
             if metal in line[12:15]: #this won't work for res code C2O, but it already ran by the time I troubleshooted this!
@@ -102,7 +102,7 @@ def bond_valences(ligands, coords, metal, charge, bond_params):
             this_ligand = this_ligand      
         this_dist = distances[x]
         print(this_ligand, this_dist)
-        #print(bond_params[(bond_params.Metal.str.upper() == metal) & (bond_params.Charge == charge) & (bond_params.CoordAtom == this_ligand)] )
+        print(bond_params[(bond_params.Metal.str.upper() == metal)])# & (bond_params.Charge == charge) & (bond_params.CoordAtom == this_ligand)] )
         try:
             this_param = bond_params[(bond_params.Metal.str.upper() == metal) & (bond_params.Charge == charge) & (bond_params.CoordAtom == this_ligand)].values[0]
         except IndexError: #a charge of 9 is code for "all" or "unknown" so it is more likely to find the correct metal:coord atom pair

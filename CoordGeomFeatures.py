@@ -66,7 +66,7 @@ def get_orig_charge(metal, filename):
     try:
         this_charge = subprocess.check_output(["grep", "^FORMUL", filename])
         this_charge = this_charge.decode("utf-8").strip().split("\n")
-        print(this_charge)
+        #print(this_charge)
         for line in this_charge: 
             #print(line)
             if metal in line[12:15]: #this won't work for res code C2O, but it already ran by the time I troubleshooted this!

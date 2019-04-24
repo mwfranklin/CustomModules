@@ -166,17 +166,16 @@ class Residue:
             self.type = "water"
         elif self.name in chromophore_res:
             self.type = "chromophore"
-        else:
+        elif self.name in aa: #modified 4/24/19 because crystal structures often contain SO4, BME, etc that aren't really residues and should be labeled other
             self.type = "protein"
-            if self.name in mod_res_list:
-                self.modres = True
-                self.onelet = mod_res_aa[mod_res_list.index(self.name)]
-            else:
-                try:
-                    self.onelet = oneletAA[aa.index(self.name)]
-                except:
-                    self.onelet = "X"
-        
+            self.onelet = oneletAA[aa.index(self.name)]
+        elif self.name in mod_res_list:
+            self.type = "protein"
+            self.modres = True
+            self.onelet = mod_res_aa[mod_res_list.index(self.name)]
+        else:
+            self.type = "cofactor"
+            
         self.chain = chain
         self.Atoms = []
         self.Coords = np.zeros((len(atom_list), 3))

@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import sys
 import itertools
+from collections import Counter
 import matplotlib.pyplot as plt
 #process results
 from sklearn.model_selection import learning_curve

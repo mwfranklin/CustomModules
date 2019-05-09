@@ -6,7 +6,73 @@ import itertools
 import matplotlib.pyplot as plt
 #process results
 from sklearn.model_selection import learning_curve
-from sklearn.metrics import roc_curve, auc, recall_score, f1_score, precision_score, confusion_matrix, matthews_corrcoef#, balanced_accuracy_score, make_scorer
+from sklearn import preprocessing
+from sklearn.metrics import roc_curve, auc, recall_score, f1_score, precision_score, confusion_matrix, matthews_corrcoef, hamming_loss
+
+def subset_data(df, subset, group_split_name = None):
+    X = df.drop(["Catalytic", "SITE_ID", 'cath_class', 'cath_arch', 'scop_class', 'scop_fold', 'ECOD_arch', 'ECOD_x_poshom', 'ECOD_hom'], axis = 1)
+    bad_terms = ("hbond_lr_", 'dslf_fa13', 'pro_close')
+    X = X.drop(columns = [term for term in X if term.startswith(bad_terms)])
+    #print(X.shape, list(X))
+
+    #general terms
+    gen_set = ['MetalCodes', 'MetalAtoms', 'Depth', 'Vol']
+    gen_terms = ("BSA", 'expHP', 'LoopDSSP', 'HelixDSSP', 'SheetDSSP')
+    all_gen_set = [ term for term in X if term.startswith(gen_terms) ]
+    gen_shell = [name for name in all_gen_set if "_S" in name]
+    gen_sph = list(set(all_gen_set).difference(gen_shell))
+    gen_shell += gen_set
+    gen_sph += gen_set
+    all_gen_set += gen_set
+    #Rosetta terms only
+    ros_sph1 = list(set([name for name in X if name.endswith("_3")]).difference(all_gen_set))
+    ros_sph2 = list(set([ name for name in X if name.endswith("_5") ]).difference(all_gen_set))
+    ros_sph3 = list(set([ name for name in X if name.endswith("_7.5") ]).difference(all_gen_set))
+    ros_shell1 = list(set([ name for name in X if name.endswith("_S5") ]).difference(all_gen_set))
+    ros_shell2 = list(set([ name for name in X if name.endswith("_S7.5") ]).difference(all_gen_set))
+    ros_shell3 = list(set([ name for name in X if name.endswith("_S10") ]).difference(all_gen_set))
+    electro = [name for name in X if name.startswith("Elec")]
+    geom = [name for name in X if name.startswith("geom")]
+    #pocket features only
+    pocket_set = ['MetalCodes', 'MetalAtoms', 'SEPocket', 'Depth', 'Vol', 'LongPath', 'farPtLow', 'PocketAreaLow', 'OffsetLow', 'LongAxLow', 'ShortAxLow', 'farPtMid', 'PocketAreaMid', 'OffsetMid', 'LongAxMid', 'ShortAxMid', 'farPtHigh', 'PocketAreaHigh', 'OffsetHigh', 'LongAxHigh', 'ShortAxHigh']
+    #pocket lining only
+    lining_set = ['num_pocket_bb', 'num_pocket_sc', 'avg_eisen_hp', 'min_eisen', 'max_eisen', 'skew_eisen', 'std_dev_eisen', 'avg_kyte_hp', 'min_kyte', 'max_kyte', 'skew_kyte', 'std_dev_kyte', 'occ_vol', 'NoSC_vol', 'SC_vol_perc']
+
+    subset_list = ["AllSph", "AllShell", "GenSph", "GenShell", "Pocket", "Lining", 
+                    'RosSph', 'RosSph1','RosSph2','RosSph3', 
+                    "RosShell", "RosShell1", 'RosShell2', 'RosShell3', 
+                    "LinPocket", "LinRosSph", "LinRosShell", 
+                    "PocketRosSph", "PocketRosShell",#new terms
+                    "Geom", "LinPocketGeom", "GeomElectro", "GeomRosSph", "GeomRosShell",
+                    "Electro", "ElectroRosSph", "ElectroRosShell", "LinPocketElectro", "LinPocketElectroGeom", 
+                    "AllSphMinusGen", "AllSphMinusLin", "AllSphMinusPocket", 
+                    "AllSphMinusGeom", "AllSphMinusElectro", "AllMinusSph", 
+                    "AllShellMinusGen", "AllShellMinusLin", "AllShellMinusPocket", 
+                    "AllShellMinusGeom", "AllShellMinusElectro", "AllMinusShell"
+                    ]
+    column_subsets = [ sorted(set(gen_sph+ros_sph1+ros_sph2+ros_sph3+pocket_set+lining_set+electro+geom)),sorted(set(gen_shell+ros_shell1+ros_shell2+ros_shell3+pocket_set+lining_set+electro+geom)), gen_sph, gen_shell, pocket_set, lining_set,
+                        ros_sph1+ros_sph2+ros_sph3, ros_sph1, ros_sph2, ros_sph3,
+                        ros_shell1+ros_shell2+ros_shell3, ros_shell1, ros_shell2, ros_shell3,
+                        lining_set+pocket_set, lining_set+ros_sph1+ros_sph2+ros_sph3, lining_set+ros_shell1+ros_shell2+ros_shell3, 
+                        pocket_set+ros_sph1+ros_sph2+ros_sph3, pocket_set+ros_shell1+ros_shell2+ros_shell3,
+                        geom, lining_set+pocket_set+geom, geom+electro, geom+ros_sph1+ros_sph2+ros_sph3, geom+ros_shell1+ros_shell2+ros_shell3,
+                        electro, electro+ros_sph1+ros_sph2+ros_sph3, electro+ros_shell1+ros_shell2+ros_shell3, lining_set+pocket_set+electro, lining_set+pocket_set+electro+geom, 
+                        sorted(set(ros_sph1+ros_sph2+ros_sph3+pocket_set+lining_set+electro+geom)), sorted(set(gen_sph+ros_sph1+ros_sph2+ros_sph3+pocket_set+electro+geom)), sorted(set(gen_sph+ros_sph1+ros_sph2+ros_sph3+lining_set+electro+geom)),
+                        sorted(set(gen_sph+ros_sph1+ros_sph2+ros_sph3+pocket_set+lining_set+electro)), sorted(set(gen_sph+ros_sph1+ros_sph2+ros_sph3+pocket_set+lining_set+geom)), sorted(set(gen_sph+pocket_set+lining_set+electro+geom)),
+                        sorted(set(ros_shell1+ros_shell2+ros_shell3+pocket_set+lining_set+electro+geom)), sorted(set(gen_shell+ros_shell1+ros_shell2+ros_shell3+pocket_set+electro+geom)), sorted(set(gen_shell+ros_shell1+ros_shell2+ros_shell3+lining_set+electro+geom)),
+                        sorted(set(gen_shell+ros_shell1+ros_shell2+ros_shell3+pocket_set+lining_set+electro)), sorted(set(gen_shell+ros_shell1+ros_shell2+ros_shell3+pocket_set+lining_set+geom)), sorted(set(gen_shell+pocket_set+lining_set+electro+geom))
+                        ]
+
+    #print(column_subsets[subset_list.index(data_subset)] )
+    if subset in subset_list:
+        X = X[ column_subsets[subset_list.index(subset)] ] 
+    else:
+        print("Not a subset in list; defaulting to AllSph")
+        X = X[ column_subsets[0] ] #this is all for usage with PCA/UMAP; it uses the rosetta sphere terms plus all the non-rosetta terms
+    if group_split_name != None:
+        X["groupID"] = preprocessing.LabelEncoder().fit_transform( df[[group_split_name]].astype(str) ) #add fold identifiers converted to number
+    y = df[["Catalytic", "SITE_ID"]] #keep SITE_ID in the answers for merging back later
+    return(X, y)
 
 def plot_confusion_matrix(cm, classes, normalize=False, title='Confusion matrix', filename = "test.png", cmap=plt.cm.Blues):
     """
@@ -193,6 +259,17 @@ def prec_score_custom(y_true, y_pred, this_label = 0):
 
 def mcc_score(y_true, y_pred):
     return( matthews_corrcoef(y_true, y_pred))
+
+def hamming_score(y_true, y_pred):
+    return( hamming_loss(y_true, y_pred))
+
+def dist_rand(y_true, y_pred):
+    cnf_matrix = confusion_matrix(y_true, y_pred)
+    totals = cnf_matrix.sum(axis=0)[:, np.newaxis]
+    totals = totals/np.sum(totals)
+    cnf_matrix = cnf_matrix.astype('float') / cnf_matrix.sum(axis=1)[:, np.newaxis]
+    dist_rand = (cnf_matrix[0][0] + -1*(1- cnf_matrix[1][1]) )/np.sqrt(2)
+    return(dist_rand)
 
 def calc_bal_acc(y_true, y_pred):
     cnf_matrix = confusion_matrix(y_true, y_pred)

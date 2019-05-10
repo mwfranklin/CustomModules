@@ -260,13 +260,20 @@ def convert_lines_to_res(pdb_lines):
     chain = ""
     name = ""
     res_index = 0
-    for line in pdb_file:
+    for line in pdb_lines:
         if line[0:4] == "ATOM" or line[0:6] == "HETATM":
             #print(res_index)
             new_res = int(line[22:26])
             #print(prev_res, resnum, len(res_atoms))
             if prev_res == new_res:
-                res_atoms.append([line[12:16].strip(), float(line[30:38]), float(line[38:46]), float(line[46:54]), float(line[54:60]), float(line[60:66]) ])
+                occ = line[54:60].strip()
+                try: occ = float(occ) 
+                except ValueError: occ = np.nan
+                bfact = line[60:66].strip()
+                try: bfact = float(bfact) 
+                except ValueError: bfact = np.nan
+                #res_atoms.append([line[12:16].strip(), float(line[30:38]), float(line[38:46]), float(line[46:54]), float(line[54:60].strip()), float(line[60:66].strip())])
+                res_atoms.append([line[12:16].strip(), float(line[30:38]), float(line[38:46]), float(line[46:54]), occ, bfact])
                 #print(res_atoms)
             else:
                 #print("atoms to append: ", len(res_atoms), name)
@@ -282,18 +289,24 @@ def convert_lines_to_res(pdb_lines):
                 resnum = int(line[22:26])
                 name = line[17:20].strip()
                 chain = line[21]
-                res_atoms.append([line[12:16].strip(), float(line[30:38]), float(line[38:46]), float(line[46:54]), float(line[54:60]), float(line[60:66])])
+                occ = line[54:60].strip()
+                try: occ = float(occ) 
+                except ValueError: occ = np.nan
+                bfact = line[60:66].strip()
+                try: bfact = float(bfact) 
+                except ValueError: bfact = np.nan
+                #res_atoms.append([line[12:16].strip(), float(line[30:38]), float(line[38:46]), float(line[46:54]), float(line[54:60].strip()), float(line[60:66].strip())])
+                res_atoms.append([line[12:16].strip(), float(line[30:38]), float(line[38:46]), float(line[46:54]), occ, bfact])
         elif line[0:6] in header_delims:
             header.append(line) 
     if len(res_atoms) != 0:
         #print(res_atoms) 
         all_res.append(Residue(resnum, name, chain, res_atoms, res_index))
         res_nums.append(resnum)
-    return(all_res, res_nums, header)
-        
+    return(all_res, res_nums, header)      
             
 def create_res(pdb, lines_only = False):
-    if lines_only = False:
+    if lines_only == False:
         with open(pdb, "r") as pdb_file:
             pdb_file = pdb_file.readlines()
         these_res, these_nums, this_header = convert_lines_to_res(pdb_file)

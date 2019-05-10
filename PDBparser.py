@@ -249,50 +249,57 @@ class Atom:
         self.name = name
         self.resnum = int(resnum)
         self.coords = [float(x), float(y), float(z)]
-            
-def create_res(pdb):
+
+def convert_lines_to_res(pdb_lines):
     all_res = []
     res_nums = []
-    with open(pdb, "r") as pdb_file:
-        prev_res = 0
-        res_atoms = []
-        resnum = 0
-        chain = ""
-        name = ""
-        res_index = 0
-        header = []
-        for line in pdb_file:
-            if line[0:4] == "ATOM" or line[0:6] == "HETATM":
-                #print(res_index)
-                new_res = int(line[22:26])
-                #print(prev_res, resnum, len(res_atoms))
-                if prev_res == new_res:
-                    res_atoms.append([line[12:16].strip(), float(line[30:38]), float(line[38:46]), float(line[46:54]), float(line[54:60]), float(line[60:66]) ])
+    header = []
+    prev_res = 0
+    res_atoms = []
+    resnum = 0
+    chain = ""
+    name = ""
+    res_index = 0
+    for line in pdb_file:
+        if line[0:4] == "ATOM" or line[0:6] == "HETATM":
+            #print(res_index)
+            new_res = int(line[22:26])
+            #print(prev_res, resnum, len(res_atoms))
+            if prev_res == new_res:
+                res_atoms.append([line[12:16].strip(), float(line[30:38]), float(line[38:46]), float(line[46:54]), float(line[54:60]), float(line[60:66]) ])
+                #print(res_atoms)
+            else:
+                #print("atoms to append: ", len(res_atoms), name)
+                if len(res_atoms) > 0:
+                    #print("atoms present")
                     #print(res_atoms)
-                else:
-                    #print("atoms to append: ", len(res_atoms), name)
-                    if len(res_atoms) > 0:
-                        #print("atoms present")
-                        #print(res_atoms)
-                        all_res.append(Residue(resnum, name, chain, res_atoms, res_index))
-                        #print(resnum, name, chain, res_index)
-                        res_nums.append(resnum)
-                        res_index += 1
-                    res_atoms = []
-                    prev_res = int(line[22:26])
-                    resnum = int(line[22:26])
-                    name = line[17:20].strip()
-                    chain = line[21]
-                    res_atoms.append([line[12:16].strip(), float(line[30:38]), float(line[38:46]), float(line[46:54]), float(line[54:60]), float(line[60:66])])
-            elif line[0:6] in header_delims:
-                header.append(line) 
-            
-        if len(res_atoms) != 0:
-            #print(res_atoms) 
-            all_res.append(Residue(resnum, name, chain, res_atoms, res_index))
-            res_nums.append(resnum)
-
+                    all_res.append(Residue(resnum, name, chain, res_atoms, res_index))
+                    #print(resnum, name, chain, res_index)
+                    res_nums.append(resnum)
+                    res_index += 1
+                res_atoms = []
+                prev_res = int(line[22:26])
+                resnum = int(line[22:26])
+                name = line[17:20].strip()
+                chain = line[21]
+                res_atoms.append([line[12:16].strip(), float(line[30:38]), float(line[38:46]), float(line[46:54]), float(line[54:60]), float(line[60:66])])
+        elif line[0:6] in header_delims:
+            header.append(line) 
+    if len(res_atoms) != 0:
+        #print(res_atoms) 
+        all_res.append(Residue(resnum, name, chain, res_atoms, res_index))
+        res_nums.append(resnum)
     return(all_res, res_nums, header)
+        
+            
+def create_res(pdb, lines_only = False):
+    if lines_only = False:
+        with open(pdb, "r") as pdb_file:
+            pdb_file = pdb_file.readlines()
+        these_res, these_nums, this_header = convert_lines_to_res(pdb_file)
+    else:
+        these_res, these_nums, this_header = convert_lines_to_res(pdb)
+    return(these_res, these_nums, this_header)
 
 #functions to retrieve PDB files
 def download_pdbs(pdb_list, output_path = "", header_only = False):

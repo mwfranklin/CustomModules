@@ -14,7 +14,7 @@ metals = ["CUA", "CU", "FE", "MG", "ZN"]
 
 def calc_RMSD(res_coords_native, res_coords_model):
     if len(res_coords_model) != len(res_coords_native):
-        print("Uneven number of atoms")
+        print("Uneven number of atoms", len(res_coords_native), len(res_coords_model))
         return
     rmsd = np.sqrt(np.sum((res_coords_native - res_coords_model)**2)/len(res_coords_native))
     return rmsd

@@ -152,7 +152,7 @@ def calc_cmm_params(metal_name, geom_name, pdb_id, out_directory):
         #print(ligand_ids, ligand_coords)
         gRMSD = 1000
         max_dev = 1000
-                
+    print("orig metal name", metal_name)            
     bond_params = pd.read_csv("/panfs/pfs.local/work/slusky/MSEAL/data/MetalParamsFiltered.txt", header = 0)
     this_charge = get_orig_charge(metal_name[0:2], "/panfs/pfs.local/work/slusky/MSEAL/data/PDB_chains/%s/%s/%s/%s.pdb"%(pdb_id[0], pdb_id[1], pdb_id, pdb_id)) #this is an absolute reference to where the original PDB should be located
     #print(this_charge, ligand_ids, ligand_coords)

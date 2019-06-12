@@ -101,7 +101,7 @@ def bond_valences(ligands, coords, metal, charge, bond_params):
         else:
             this_ligand = this_ligand      
         this_dist = distances[x]
-        print(this_ligand, this_dist)
+        print(this_ligand, this_dist, charge)
         #print(bond_params[(bond_params.Metal.str.upper() == metal)])# & (bond_params.Charge == charge) & (bond_params.CoordAtom.str.upper() == this_ligand)] )
         try:
             this_param = bond_params[(bond_params.Metal.str.upper() == metal) & (bond_params.Charge == charge) & (bond_params.CoordAtom.str.upper() == this_ligand)].values[0]

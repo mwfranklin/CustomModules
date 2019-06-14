@@ -100,11 +100,16 @@ def subset_data(df, subset, group_split_name = None, fill_missing = True):
     else:
         print("Not a subset in list; defaulting to AllSph")
         X = X[ column_subsets[0] ] #this is all for usage with PCA/UMAP; it uses the rosetta sphere terms plus all the non-rosetta terms
-    if fill_missing == True:
-        imputer = SimpleImputer(strategy="mean")
-        X = imputer.fit_transform(X)
     if group_split_name != None:
         X["groupID"] = preprocessing.LabelEncoder().fit_transform( df[[group_split_name]].astype(str) ) #add fold identifiers converted to number
+
+    if fill_missing == True:
+        #print(X.head(10))
+        header = list(X)
+        imputer = SimpleImputer(strategy="mean")
+        X = imputer.fit_transform(X) #this converts to numpy array, so have to convert back since we still use column names
+        X = pd.DataFrame(X, columns = header)
+        #print(X.head(10))
     y = df[["Catalytic", "SITE_ID"]] #keep SITE_ID in the answers for merging back later
     return(X, y)
 

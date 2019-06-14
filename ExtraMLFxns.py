@@ -10,7 +10,7 @@ from sklearn.model_selection import learning_curve
 from sklearn import preprocessing
 from sklearn.metrics import roc_curve, auc, recall_score, f1_score, precision_score, confusion_matrix, matthews_corrcoef, hamming_loss
 
-def subset_data(df, subset, group_split_name = None):
+def subset_data(df, subset, group_split_name = None, fill_missing = True):
     not_needed = ("Catalytic", "SITE_ID", "ValidSet", 'cath_class', 'cath_arch', 'scop_class', 'scop_fold', 'ECOD_arch', 'ECOD_x_poshom', 'ECOD_hom')
     X = df.drop(columns = [term for term in df if term.startswith(not_needed)])
     bad_terms = ("hbond_lr_", 'dslf_fa13', 'pro_close')
@@ -99,6 +99,9 @@ def subset_data(df, subset, group_split_name = None):
     else:
         print("Not a subset in list; defaulting to AllSph")
         X = X[ column_subsets[0] ] #this is all for usage with PCA/UMAP; it uses the rosetta sphere terms plus all the non-rosetta terms
+    if fill_missing == True:
+        imputer = SimpleImputer(strategy="mean")
+        X = imputer.fit_transform(X)
     if group_split_name != None:
         X["groupID"] = preprocessing.LabelEncoder().fit_transform( df[[group_split_name]].astype(str) ) #add fold identifiers converted to number
     y = df[["Catalytic", "SITE_ID"]] #keep SITE_ID in the answers for merging back later

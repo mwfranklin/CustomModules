@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 #process results
 from sklearn.model_selection import learning_curve
 from sklearn import preprocessing
+from sklearn.impute import SimpleImputer
 from sklearn.metrics import roc_curve, auc, recall_score, f1_score, precision_score, confusion_matrix, matthews_corrcoef, hamming_loss
 
 def subset_data(df, subset, group_split_name = None, fill_missing = True):

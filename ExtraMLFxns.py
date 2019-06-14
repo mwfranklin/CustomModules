@@ -11,14 +11,15 @@ from sklearn import preprocessing
 from sklearn.metrics import roc_curve, auc, recall_score, f1_score, precision_score, confusion_matrix, matthews_corrcoef, hamming_loss
 
 def subset_data(df, subset, group_split_name = None):
-    X = df.drop(["Catalytic", "SITE_ID", 'cath_class', 'cath_arch', 'scop_class', 'scop_fold', 'ECOD_arch', 'ECOD_x_poshom', 'ECOD_hom'], axis = 1)
+    not_needed = ("Catalytic", "SITE_ID", "ValidSet", 'cath_class', 'cath_arch', 'scop_class', 'scop_fold', 'ECOD_arch', 'ECOD_x_poshom', 'ECOD_hom')
+    X = df.drop(columns = [term for term in df if term.startswith(not_needed)])
     bad_terms = ("hbond_lr_", 'dslf_fa13', 'pro_close')
     X = X.drop(columns = [term for term in X if term.startswith(bad_terms)])
     #print(X.shape, list(X))
 
     #general terms
-    gen_set = ['MetalCodes', 'MetalAtoms', 'Depth', 'Vol']
-    gen_terms = ("BSA", 'expHP', 'LoopDSSP', 'HelixDSSP', 'SheetDSSP')
+    gen_set = ['MetalCodes', 'MetalAtoms', 'Depth', 'Vol', "SITEDistCenter", "SITEDistNormCenter"]
+    gen_terms = ("BSA", 'expHP')
     all_gen_set = [ term for term in X if term.startswith(gen_terms) ]
     gen_shell = [name for name in all_gen_set if "_S" in name]
     gen_sph = list(set(all_gen_set).difference(gen_shell))
@@ -26,42 +27,70 @@ def subset_data(df, subset, group_split_name = None):
     gen_sph += gen_set
     all_gen_set += gen_set
     #Rosetta terms only
-    ros_sph1 = list(set([name for name in X if name.endswith("_3")]).difference(all_gen_set))
-    ros_sph2 = list(set([ name for name in X if name.endswith("_5") ]).difference(all_gen_set))
-    ros_sph3 = list(set([ name for name in X if name.endswith("_7.5") ]).difference(all_gen_set))
-    ros_shell1 = list(set([ name for name in X if name.endswith("_S5") ]).difference(all_gen_set))
-    ros_shell2 = list(set([ name for name in X if name.endswith("_S7.5") ]).difference(all_gen_set))
-    ros_shell3 = list(set([ name for name in X if name.endswith("_S10") ]).difference(all_gen_set))
+    ros_sum_sph0 = list(set([name for name in X if name.endswith("_Sum_3.5")]).difference(all_gen_set))
+    ros_sum_sph1 = list(set([ name for name in X if name.endswith("_Sum_5") ]).difference(all_gen_set))
+    ros_sum_sph2 = list(set([ name for name in X if name.endswith("_Sum_7.5") ]).difference(all_gen_set))
+    ros_sum_sph3 = list(set([ name for name in X if name.endswith("_Sum_10") ]).difference(all_gen_set))
+    ros_sum_shell1 = list(set([ name for name in X if name.endswith("_Sum_S5") ]).difference(all_gen_set))
+    ros_sum_shell2 = list(set([ name for name in X if name.endswith("_Sum_S7.5") ]).difference(all_gen_set))
+    ros_sum_shell3 = list(set([ name for name in X if name.endswith("_Sum_S10") ]).difference(all_gen_set))
+    ros_sum_shell = ros_sum_sph0 + ros_sum_shell1 + ros_sum_shell2 + ros_sum_shell2
+    ros_sum_sph = ros_sum_sph0 + ros_sum_sph1 + ros_sum_sph2 + ros_sum_sph2
+    
+    ros_mean_sph0 = list(set([name for name in X if name.endswith("_Mean_3.5")]).difference(all_gen_set))
+    ros_mean_sph1 = list(set([ name for name in X if name.endswith("_Mean_5") ]).difference(all_gen_set))
+    ros_mean_sph2 = list(set([ name for name in X if name.endswith("_Mean_7.5") ]).difference(all_gen_set))
+    ros_mean_sph3 = list(set([ name for name in X if name.endswith("_Mean_10") ]).difference(all_gen_set))
+    ros_mean_shell1 = list(set([ name for name in X if name.endswith("_Mean_S5") ]).difference(all_gen_set))
+    ros_mean_shell2 = list(set([ name for name in X if name.endswith("_Mean_S7.5") ]).difference(all_gen_set))
+    ros_mean_shell3 = list(set([ name for name in X if name.endswith("_Mean_S10") ]).difference(all_gen_set))
+    ros_mean_shell = ros_mean_sph0 + ros_mean_shell1 + ros_mean_shell2 + ros_mean_shell2
+    ros_mean_sph = ros_mean_sph0 + ros_mean_sph1 + ros_mean_sph2 + ros_mean_sph2
+    
     electro = [name for name in X if name.startswith("Elec")]
     geom = [name for name in X if name.startswith("geom")]
     #pocket features only
-    pocket_set = ['MetalCodes', 'MetalAtoms', 'SEPocket', 'Depth', 'Vol', 'LongPath', 'farPtLow', 'PocketAreaLow', 'OffsetLow', 'LongAxLow', 'ShortAxLow', 'farPtMid', 'PocketAreaMid', 'OffsetMid', 'LongAxMid', 'ShortAxMid', 'farPtHigh', 'PocketAreaHigh', 'OffsetHigh', 'LongAxHigh', 'ShortAxHigh']
+    pocket_set = ['MetalCodes', 'MetalAtoms', 'SEPocket', 'Depth', 'Vol', "SITEDistCenter", "SITEDistNormCenter", 'LongPath', 'farPtLow', 'PocketAreaLow', 'OffsetLow', 'LongAxLow', 'ShortAxLow', 'farPtMid', 'PocketAreaMid', 'OffsetMid', 'LongAxMid', 'ShortAxMid', 'farPtHigh', 'PocketAreaHigh', 'OffsetHigh', 'LongAxHigh', 'ShortAxHigh']
     #pocket lining only
     lining_set = ['num_pocket_bb', 'num_pocket_sc', 'avg_eisen_hp', 'min_eisen', 'max_eisen', 'skew_eisen', 'std_dev_eisen', 'avg_kyte_hp', 'min_kyte', 'max_kyte', 'skew_kyte', 'std_dev_kyte', 'occ_vol', 'NoSC_vol', 'SC_vol_perc']
 
-    subset_list = ["AllSph", "AllShell", "GenSph", "GenShell", "Pocket", "Lining", 
-                    'RosSph', 'RosSph1','RosSph2','RosSph3', 
-                    "RosShell", "RosShell1", 'RosShell2', 'RosShell3', 
-                    "LinPocket", "LinRosSph", "LinRosShell", 
-                    "PocketRosSph", "PocketRosShell",#new terms
-                    "Geom", "LinPocketGeom", "GeomElectro", "GeomRosSph", "GeomRosShell",
-                    "Electro", "ElectroRosSph", "ElectroRosShell", "LinPocketElectro", "LinPocketElectroGeom", 
-                    "AllSphMinusGen", "AllSphMinusLin", "AllSphMinusPocket", 
-                    "AllSphMinusGeom", "AllSphMinusElectro", "AllMinusSph", 
-                    "AllShellMinusGen", "AllShellMinusLin", "AllShellMinusPocket", 
-                    "AllShellMinusGeom", "AllShellMinusElectro", "AllMinusShell"
+    subset_list = ["AllSumSph", "AllMeanSph", "AllSumShell", "AllMeanShell", 
+                    "GenSph", "GenShell", "Pocket", "Lining", 
+                    'RosSumSph', 'RosSumSph0', 'RosSumSph1', 'RosMeanSph', 'RosMeanSph0', 'RosMeanSph1', 
+                    'RosSumShell', 'RosSumShell1', 'RosMeanShell', 'RosMeanShell1',
+                    "LinPocket", "LinRosSumSph", "LinRosMeanSph", "LinRosSumShell", "LinRosMeanShell",
+                    "PocketRosSumSph", "PocketRosMeanSph", "PocketRosSumShell", "PocketRosMeanShell",
+                    "Geom", "LinPocketGeom", "GeomElectro", "GeomRosSumSph", "GeomRosSumShell", "GeomRosMeanSph", "GeomRosMeanShell",
+                    
+                    "Electro", "LinPocketElectro", "LinPocketElectroGeom", "ElectroRosSumSph", "ElectroRosSumShell", "ElectroRosMeanSph", "ElectroRosMeanShell", 
+                    "AllSumSphMinusGen", "AllSumSphMinusLin", "AllSumSphMinusPocket", 
+                    "AllSumSphMinusGeom", "AllSumSphMinusElectro", 
+                    "AllMeanSphMinusGen", "AllMeanSphMinusLin", "AllMeanSphMinusPocket", 
+                    "AllMeanSphMinusGeom", "AllMeanSphMinusElectro", "AllMinusRosSph",
+                    
+                    "AllSumShellMinusGen", "AllSumShellMinusLin", "AllSumShellMinusPocket", 
+                    "AllSumShellMinusGeom", "AllSumShellMinusElectro", 
+                    "AllMeanShellMinusGen", "AllMeanShellMinusLin", "AllMeanShellMinusPocket", 
+                    "AllMeanShellMinusGeom", "AllMeanShellMinusElectro", "AllMinusRosShell",
                     ]
-    column_subsets = [ sorted(set(gen_sph+ros_sph1+ros_sph2+ros_sph3+pocket_set+lining_set+electro+geom)),sorted(set(gen_shell+ros_shell1+ros_shell2+ros_shell3+pocket_set+lining_set+electro+geom)), gen_sph, gen_shell, pocket_set, lining_set,
-                        ros_sph1+ros_sph2+ros_sph3, ros_sph1, ros_sph2, ros_sph3,
-                        ros_shell1+ros_shell2+ros_shell3, ros_shell1, ros_shell2, ros_shell3,
-                        lining_set+pocket_set, lining_set+ros_sph1+ros_sph2+ros_sph3, lining_set+ros_shell1+ros_shell2+ros_shell3, 
-                        pocket_set+ros_sph1+ros_sph2+ros_sph3, pocket_set+ros_shell1+ros_shell2+ros_shell3,
-                        geom, lining_set+pocket_set+geom, geom+electro, geom+ros_sph1+ros_sph2+ros_sph3, geom+ros_shell1+ros_shell2+ros_shell3,
-                        electro, electro+ros_sph1+ros_sph2+ros_sph3, electro+ros_shell1+ros_shell2+ros_shell3, lining_set+pocket_set+electro, lining_set+pocket_set+electro+geom, 
-                        sorted(set(ros_sph1+ros_sph2+ros_sph3+pocket_set+lining_set+electro+geom)), sorted(set(gen_sph+ros_sph1+ros_sph2+ros_sph3+pocket_set+electro+geom)), sorted(set(gen_sph+ros_sph1+ros_sph2+ros_sph3+lining_set+electro+geom)),
-                        sorted(set(gen_sph+ros_sph1+ros_sph2+ros_sph3+pocket_set+lining_set+electro)), sorted(set(gen_sph+ros_sph1+ros_sph2+ros_sph3+pocket_set+lining_set+geom)), sorted(set(gen_sph+pocket_set+lining_set+electro+geom)),
-                        sorted(set(ros_shell1+ros_shell2+ros_shell3+pocket_set+lining_set+electro+geom)), sorted(set(gen_shell+ros_shell1+ros_shell2+ros_shell3+pocket_set+electro+geom)), sorted(set(gen_shell+ros_shell1+ros_shell2+ros_shell3+lining_set+electro+geom)),
-                        sorted(set(gen_shell+ros_shell1+ros_shell2+ros_shell3+pocket_set+lining_set+electro)), sorted(set(gen_shell+ros_shell1+ros_shell2+ros_shell3+pocket_set+lining_set+geom)), sorted(set(gen_shell+pocket_set+lining_set+electro+geom))
+    column_subsets = [ sorted(set(gen_sph+ros_sum_sph+pocket_set+lining_set+electro+geom)),sorted(set(gen_shell+ros_mean_sph+pocket_set+lining_set+electro+geom)), sorted(set(gen_sph+ros_sum_shell+pocket_set+lining_set+electro+geom)),sorted(set(gen_shell+ros_mean_shell+pocket_set+lining_set+electro+geom)), 
+                        gen_sph, gen_shell, pocket_set, lining_set,
+                        ros_sum_sph, ros_sum_sph0, ros_sum_sph1, ros_mean_sph, ros_mean_sph0, ros_mean_sph1, 
+                        ros_sum_shell, ros_sum_shell1, ros_mean_shell, ros_mean_shell1, 
+                        lining_set+pocket_set, lining_set+ros_sum_sph, lining_set+ros_mean_sph, lining_set+ros_sum_shell, lining_set+ros_mean_shell, 
+                        pocket_set+ros_sum_sph, pocket_set+ros_mean_sph, pocket_set+ros_sum_shell, pocket_set+ros_mean_shell, 
+                        geom, lining_set+pocket_set+geom, geom+electro, geom+ros_sum_sph, geom+ros_sum_shell,geom+ros_mean_sph, geom+ros_mean_shell,
+                        electro, lining_set+pocket_set+electro, lining_set+pocket_set+electro+geom, electro+ros_sum_sph, electro+ros_sum_shell, electro+ros_mean_sph, electro+ros_mean_shell, 
+                        
+                        sorted(set(ros_sum_sph+pocket_set+lining_set+electro+geom)), sorted(set(gen_sph+ros_sum_sph+pocket_set+electro+geom)), sorted(set(gen_sph+ros_sum_sph+lining_set+electro+geom)),
+                        sorted(set(gen_sph+ros_sum_sph+pocket_set+lining_set+electro)), sorted(set(gen_sph+ros_sum_sph+pocket_set+lining_set+geom)), 
+                        sorted(set(ros_mean_sph+pocket_set+lining_set+electro+geom)), sorted(set(gen_sph+ros_mean_sph+pocket_set+electro+geom)), sorted(set(gen_sph+ros_mean_sph+lining_set+electro+geom)),
+                        sorted(set(gen_sph+ros_mean_sph+pocket_set+lining_set+electro)), sorted(set(gen_sph+ros_mean_sph+pocket_set+lining_set+geom)), sorted(set(gen_sph+pocket_set+lining_set+electro+geom)),
+                        
+                        sorted(set(ros_sum_shell+pocket_set+lining_set+electro+geom)), sorted(set(gen_shell+ros_sum_shell+pocket_set+electro+geom)), sorted(set(gen_shell+ros_sum_shell+lining_set+electro+geom)),
+                        sorted(set(gen_shell+ros_sum_shell+pocket_set+lining_set+electro)), sorted(set(gen_shell+ros_sum_shell+pocket_set+lining_set+geom)), 
+                        sorted(set(ros_mean_shell+pocket_set+lining_set+electro+geom)), sorted(set(gen_shell+ros_mean_shell+pocket_set+electro+geom)), sorted(set(gen_shell+ros_mean_shell+lining_set+electro+geom)),
+                        sorted(set(gen_shell+ros_mean_shell+pocket_set+lining_set+electro)), sorted(set(gen_shell+ros_mean_shell+pocket_set+lining_set+geom)), sorted(set(gen_shell+pocket_set+lining_set+electro+geom)),
                         ]
 
     #print(column_subsets[subset_list.index(data_subset)] )

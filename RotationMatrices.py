@@ -33,11 +33,13 @@ def rotation_matrix(vector1, origin):
 def translation(new_point, origin):
     return (new_point - origin)
 
-def rotate_trans_coords(a, b, a_orig, b_orig, res_coord_array):
-    #a, b are current points; a_orig, b_orig are where they should move to; res_coord_array contains coordinates to be moved
-    rot_mat = rotation_matrix(a-b, a_orig-b_orig)
+def rotate_trans_coords(a, b, a_origin, b_origin, res_coord_array):
+    #a, b are current points; a_origin, b_origin are where they should move to; res_coord_array contains coordinates to be moved
+    #print(a_origin, b_origin)
+    #print(a, b)
+    rot_mat = rotation_matrix(a-b, a_origin-b_origin)
     #print(rot_mat)
-    trans_vect = translation(np.asarray(np.dot(rot_mat, a))[0], a_orig )
+    trans_vect = translation(np.asarray(np.dot(rot_mat, a))[0], a_origin )
     #print(trans_vect)
     matrix_coords = np.transpose(res_coord_array)
     matrix_rot = np.matmul(rot_mat, matrix_coords)
@@ -48,7 +50,7 @@ def rotate_trans_coords(a, b, a_orig, b_orig, res_coord_array):
         rotated_coords[x] = np.dot(rot_mat, res_coord_array[x])
     """
     rotated_coords = np.transpose(matrix_rot)
-    print(rotated_coords)
+    #print(rotated_coords)
     rotated_coords = rotated_coords - trans_vect
     return(rotated_coords)
 

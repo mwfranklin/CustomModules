@@ -29,7 +29,7 @@ mod_res_aa = ["A", "A", "N", "D", "D", "D", "C", "C", "C", "C", "C", "C", "C", "
             "Q", "H", "H", "H", "H", "H", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K", 
             "M", "M", "M", "M", "F", "P", "P", "P", "S", "T", "W", "W", "Y", "Y", "Y", "V"]
 chromophore_res = ["DYG", "CRQ", "CRG", "CRO", "GYS", "OFM", "CRG"]
-metals = ["CUA", "CU", "FE", "MG", "ZN", "MN"]
+metals = ["CUA", "CU", "FE", "MG", "ZN", "MN", "FE2", "FES", "FEO", "CU1", "MO", "MOO", "MOS", "NI", "3CO", "CO", "K", "CA", "NA"]
 header_delims = ["HEADER", "SEQRES", "HET   ", "HETNAM", "EXPDTA", "SOURCE", "COMPND", "TITLE ", "SEQADV", "MODRES"] #this should include other header start info of relevance with 6 characters
 
 #a Protein is created by the following pair of calls:

@@ -11,13 +11,12 @@ from sklearn import preprocessing
 from sklearn.impute import SimpleImputer
 from sklearn.metrics import roc_curve, auc, recall_score, f1_score, precision_score, confusion_matrix, matthews_corrcoef, hamming_loss
 
-def subset_data(df, subset, group_split_name = None, fill_missing = True):
+def subset_data(df, subset, group_split_name = None, fill_missing = True, other_bad_terms = []):
     not_needed = ("Catalytic", "SITE_ID", "ValidSet", 'cath_class', 'cath_arch', 'scop_class', 'scop_fold', 'ECOD_arch', 'ECOD_x_poshom', 'ECOD_hom')
     X = df.drop(columns = [term for term in df if term.startswith(not_needed)])
     bad_terms = ("hbond_lr_", 'dslf_fa13', 'pro_close')
     X = X.drop(columns = [term for term in X if term.startswith(bad_terms)])
     #print(X.shape, list(X))
-
     #general terms
     gen_set = ['MetalCodes', 'MetalAtoms', 'Depth', 'Vol', "SITEDistCenter", "SITEDistNormCenter"]
     gen_terms = ("BSA", 'expHP')
@@ -52,9 +51,11 @@ def subset_data(df, subset, group_split_name = None, fill_missing = True):
     geom = [name for name in X if name.startswith("geom")]
     #pocket features only
     pocket_set = ['MetalCodes', 'MetalAtoms', 'SEPocket', 'Depth', 'Vol', "SITEDistCenter", "SITEDistNormCenter", 'LongPath', 'farPtLow', 'PocketAreaLow', 'OffsetLow', 'LongAxLow', 'ShortAxLow', 'farPtMid', 'PocketAreaMid', 'OffsetMid', 'LongAxMid', 'ShortAxMid', 'farPtHigh', 'PocketAreaHigh', 'OffsetHigh', 'LongAxHigh', 'ShortAxHigh']
+    pocket_set = list(set(pocket_set).difference(other_bad_terms))
     #pocket lining only
     lining_set = ['num_pocket_bb', 'num_pocket_sc', 'avg_eisen_hp', 'min_eisen', 'max_eisen', 'skew_eisen', 'std_dev_eisen', 'avg_kyte_hp', 'min_kyte', 'max_kyte', 'skew_kyte', 'std_dev_kyte', 'occ_vol', 'NoSC_vol', 'SC_vol_perc']
-
+    lining_set = list(set(lining_set).difference(lining_set))
+    
     subset_list = ["AllSumSph", "AllMeanSph", "AllSumShell", "AllMeanShell", 
                     "GenSph", "GenShell", "Pocket", "Lining", 
                     'RosSumSph', 'RosSumSph0', 'RosSumSph1', 'RosMeanSph', 'RosMeanSph0', 'RosMeanSph1', 

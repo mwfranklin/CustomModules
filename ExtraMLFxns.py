@@ -111,7 +111,7 @@ def subset_data(df, subset, group_split_name = None, fill_missing = True, other_
         X = imputer.fit_transform(X) #this converts to numpy array, so have to convert back since we still use column names
         X = pd.DataFrame(X, columns = header)
         #print(X.head(10))
-    y = df[["Catalytic", "SITE_ID"]] #keep SITE_ID in the answers for merging back later
+    y = df[["SITE_ID", "Catalytic"]] #keep SITE_ID in the answers for merging back later
     return(X, y)
 
 def plot_confusion_matrix(cm, classes, normalize=False, title='Confusion matrix', filename = "test.png", cmap=plt.cm.Blues):

@@ -14,7 +14,7 @@ from sklearn.metrics import roc_curve, auc, recall_score, f1_score, precision_sc
 def subset_data(df, subset, group_split_name = None, fill_missing = True, other_bad_terms = []):
     not_needed = ("Catalytic", "SITE_ID", "ValidSet", 'cath_class', 'cath_arch', 'scop_class', 'scop_fold', 'ECOD_arch', 'ECOD_x_poshom', 'ECOD_hom')
     X = df.drop(columns = [term for term in df if term.startswith(not_needed)])
-    bad_terms = ("hbond_lr_", 'dslf_fa13', 'pro_close')
+    bad_terms = ("hbond_lr_", 'dslf_fa13', 'pro_close', 'ref')
     X = X.drop(columns = [term for term in X if term.startswith(bad_terms)])
     #print(X.shape, list(X))
     #general terms

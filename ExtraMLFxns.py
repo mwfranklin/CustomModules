@@ -16,17 +16,18 @@ def subset_data(df, subset, group_split_name = None, fill_missing = True, other_
     X = df.drop(columns = [term for term in df if term.startswith(not_needed)])
     bad_terms = ("hbond_lr_", 'dslf_fa13', 'pro_close', 'ref', 'fa_sol_')
     X = X.drop(columns = [term for term in X if term.startswith(bad_terms)])
-    #print(X.shape, list(X))
+    #print(X.shape)#, list(X))
     #general terms
     gen_set = ['MetalCodes', 'MetalAtoms', 'Depth', 'Vol', "SITEDistCenter", "SITEDistNormCenter"]
-    gen_terms = ("BSA", 'expHP')
+    gen_terms = ("BSA", 'SASA')
     all_gen_set = [ term for term in X if term.startswith(gen_terms) ]
     gen_shell = [name for name in all_gen_set if "_S" in name]
     gen_sph = list(set(all_gen_set).difference(gen_shell))
     gen_shell += gen_set
-    gen_shell += ["BSA_3.5", "expHP_3.5"]
+    gen_shell += ["BSA_3.5", "SASA_3.5"]
     gen_sph += gen_set
     all_gen_set += gen_set
+    all_gen_set = sorted(set(all_gen_set))
     #Rosetta terms only
     ros_sum_sph0 = list(set([name for name in X if name.endswith("_Sum_3.5")]).difference(all_gen_set))
     ros_sum_sph1 = list(set([ name for name in X if name.endswith("_Sum_5") ]).difference(all_gen_set))
@@ -55,7 +56,10 @@ def subset_data(df, subset, group_split_name = None, fill_missing = True, other_
     pocket_set = list(set(pocket_set).difference(other_bad_terms))
     #pocket lining only
     lining_set = ['num_pocket_bb', 'num_pocket_sc', 'avg_eisen_hp', 'min_eisen', 'max_eisen', 'skew_eisen', 'std_dev_eisen', 'avg_kyte_hp', 'min_kyte', 'max_kyte', 'skew_kyte', 'std_dev_kyte', 'occ_vol', 'NoSC_vol', 'SC_vol_perc']
-    lining_set = list(set(lining_set).difference(lining_set))
+    lining_set = list(set(lining_set).difference(other_bad_terms))
+    
+    #print( len(all_gen_set), len(sorted(set(ros_sum_sph+ros_sum_shell+ros_mean_shell+ros_mean_sph))), len(electro), len(geom), len(pocket_set), len(lining_set))
+    #print(len(sorted(set(ros_sum_sph+ros_sum_shell+ros_mean_shell+ros_mean_sph+all_gen_set+electro+geom+pocket_set+lining_set))))
     
     subset_list = ["AllSumSph", "AllMeanSph", "AllSumShell", "AllMeanShell", 
                     "GenSph", "GenShell", "Pocket", "Lining", 

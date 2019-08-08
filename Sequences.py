@@ -337,7 +337,7 @@ def align_structures_MMTSB(pdb1, pdb1chain, pdb2):
 
 def align_structures(pdb1, pdb2):
     #pdb2 will be aligned to pdb2
-    os.system("/Users/meghan/TMalign -A %s.pdb -B %s.pdb >TM_%s.txt" %(pdb1, pdb2, pdb1))
+    os.system("/Users/meghan/CompBioPrograms/TMalign -A %s.pdb -B %s.pdb >TM_%s.txt" %(pdb1, pdb2, pdb1))
     
     with open("TM_%s.txt" %pdb1, "r") as TM_align:
         tm_lines = TM_align.readlines()
@@ -361,34 +361,46 @@ def align_structures(pdb1, pdb2):
     with open("%s.pdb" %pdb2, "r") as pdb_file:
         old_pdb = pdb_file.readlines()
     
-    X_coords = np.zeros(len(old_pdb), dtype = float)
-    Y_coords = np.zeros(len(old_pdb), dtype = float)
-    Z_coords = np.zeros(len(old_pdb), dtype = float)    
-    for i in range(0, len(old_pdb)):
-        if old_pdb[i][0:4] == "ATOM":
-            X_coords[i] = float(old_pdb[i][30:38])
-            Y_coords[i] = float(old_pdb[i][38:46])
-            Z_coords[i] = float(old_pdb[i][46:54])
-          
-    all_coords = np.zeros((len(X_coords),3))
-    j= 0
-    for j in range(0, len(X_coords)):
-        all_coords[j][0] = trans_matrix[0] + rot_matrix[0][0]*X_coords[j] + rot_matrix[0][1]*Y_coords[j] + rot_matrix[0][2]*Z_coords[j]
-        all_coords[j][1] = trans_matrix[1] + rot_matrix[1][0]*X_coords[j] + rot_matrix[1][1]*Y_coords[j] + rot_matrix[1][2]*Z_coords[j]
-        all_coords[j][2] = trans_matrix[2] + rot_matrix[2][0]*X_coords[j] + rot_matrix[2][1]*Y_coords[j] + rot_matrix[2][2]*Z_coords[j]
-    
-    #print("%0.3f" %all_coords[0][0]) # decimal.Decimal.from_float(all_coords[0][0]))
     with open("%s_aligned.pdb" %pdb2, "w+") as new_pdb:
         for i in range(0, len(old_pdb)):
             line = old_pdb[i]
-            x_coord = "%0.3f" % all_coords[i][0]
-            y_coord = "%0.3f" % all_coords[i][1]
-            z_coord = "%0.3f" % all_coords[i][2]
-            x_coord = x_coord.rjust(8)
-            y_coord = y_coord.rjust(8)
-            z_coord = z_coord.rjust(8)
-            coords = x_coord+y_coord+z_coord
-            #print(len(coords))
-            new_pdb.write(line[0:30] + coords + line[54:])
-    
-    
+            if line[0:4] == "ANIS":
+                continue
+            elif line[0:4] == "ATOM":
+                X_coords = float(line[30:38])
+                Y_coords = float(line[38:46])
+                Z_coords = float(line[46:54])
+                
+                new_x = trans_matrix[0] + rot_matrix[0][0]*X_coords + rot_matrix[0][1]*Y_coords + rot_matrix[0][2]*Z_coords
+                new_y = trans_matrix[1] + rot_matrix[1][0]*X_coords + rot_matrix[1][1]*Y_coords + rot_matrix[1][2]*Z_coords
+                new_z = trans_matrix[2] + rot_matrix[2][0]*X_coords + rot_matrix[2][1]*Y_coords + rot_matrix[2][2]*Z_coords
+                
+                x_coord = "%0.3f" % new_x
+                y_coord = "%0.3f" % new_y
+                z_coord = "%0.3f" % new_z
+                x_coord = x_coord.rjust(8)
+                y_coord = y_coord.rjust(8)
+                z_coord = z_coord.rjust(8)
+                coords = x_coord+y_coord+z_coord
+                #print(len(coords))
+                new_pdb.write(line[0:30] + coords + line[54:])    
+            elif line[0:6] == "HETATM":
+                X_coords = float(line[30:38])
+                Y_coords = float(line[38:46])
+                Z_coords = float(line[46:54])
+                
+                new_x = trans_matrix[0] + rot_matrix[0][0]*X_coords + rot_matrix[0][1]*Y_coords + rot_matrix[0][2]*Z_coords
+                new_y = trans_matrix[1] + rot_matrix[1][0]*X_coords + rot_matrix[1][1]*Y_coords + rot_matrix[1][2]*Z_coords
+                new_z = trans_matrix[2] + rot_matrix[2][0]*X_coords + rot_matrix[2][1]*Y_coords + rot_matrix[2][2]*Z_coords
+                
+                x_coord = "%0.3f" % new_x
+                y_coord = "%0.3f" % new_y
+                z_coord = "%0.3f" % new_z
+                x_coord = x_coord.rjust(8)
+                y_coord = y_coord.rjust(8)
+                z_coord = z_coord.rjust(8)
+                coords = x_coord+y_coord+z_coord
+                #print(len(coords))
+                new_pdb.write(line[0:30] + coords + line[54:])
+            else:
+                new_pdb.write(line)

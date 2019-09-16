@@ -254,7 +254,7 @@ def convert_lines_to_res(pdb_lines):
     all_res = []
     res_nums = []
     header = []
-    prev_res = 0
+    prev_res = -1000
     res_atoms = []
     resnum = 0
     chain = ""

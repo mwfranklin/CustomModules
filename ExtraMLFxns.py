@@ -11,14 +11,14 @@ from sklearn import preprocessing
 from sklearn.impute import SimpleImputer
 from sklearn.metrics import roc_curve, auc, recall_score, f1_score, precision_score, confusion_matrix, matthews_corrcoef, hamming_loss
 
-def subset_data(df, subset, group_split_name = None, fill_missing = True, other_bad_terms = []):
+def subset_data(df, subset, group_split_name = None, other_bad_terms = []):
     not_needed = ("Catalytic", "SITE_ID", "ValidSet", 'NewSet', 'cath_class', 'cath_arch', 'scop_class', 'scop_fold', 'ECOD_arch', 'ECOD_x_poshom', 'ECOD_hom')
     X = df.drop(columns = [term for term in df if term.startswith(not_needed)])
-    bad_terms = ("hbond_lr_", 'dslf_fa13', 'pro_close', 'ref', 'fa_sol_')
+    bad_terms = ("hbond_lr_", 'dslf_fa13', 'pro_close', 'ref', 'fa_sol_', 'MetalCodes', 'MetalAtoms', 'SEPocket')
     X = X.drop(columns = [term for term in X if term.startswith(bad_terms)])
     #print(X.shape)#, list(X))
     #general terms
-    gen_set = ['MetalCodes', 'MetalAtoms', 'Depth', 'Vol', "SITEDistCenter", "SITEDistNormCenter"]
+    gen_set = ['Depth', 'Vol', "SITEDistCenter", "SITEDistNormCenter"]
     gen_terms = ("BSA", 'SASA')
     all_gen_set = [ term for term in X if term.startswith(gen_terms) ]
     gen_shell = [name for name in all_gen_set if "_S" in name]
@@ -51,11 +51,19 @@ def subset_data(df, subset, group_split_name = None, fill_missing = True, other_
     
     electro = [name for name in X if name.startswith("Elec")]
     geom = [name for name in X if name.startswith("geom")]
+    findgeo_geoms = ("lin", "trv", "tri", "tev", "spv", 
+        "tet", "spl", "bva", "bvp", "pyv", 
+        "spy", "tbp", "tpv", 
+        "oct", "tpr", "pva", "pvp", "cof", "con", "ctf", "ctn",
+        "pbp", "coc", "ctp", "hva", "hvp", "cuv", "sav",
+        "hbp", "cub", "sqa", "boc", "bts", "btt", 
+        "ttp", "csa")
+    geom = [name for name in geom if not name.endswith(findgeo_geoms)] #remove the individual geom types
     #pocket features only
-    pocket_set = ['MetalCodes', 'MetalAtoms', 'SEPocket', 'Depth', 'Vol', "SITEDistCenter", "SITEDistNormCenter", 'LongPath', 'farPtLow', 'PocketAreaLow', 'OffsetLow', 'LongAxLow', 'ShortAxLow', 'farPtMid', 'PocketAreaMid', 'OffsetMid', 'LongAxMid', 'ShortAxMid', 'farPtHigh', 'PocketAreaHigh', 'OffsetHigh', 'LongAxHigh', 'ShortAxHigh']
+    pocket_set = ['Depth', 'Vol', "SITEDistCenter", "SITEDistNormCenter", 'LongPath', 'farPtLow', 'PocketAreaLow', 'OffsetLow', 'LongAxLow', 'ShortAxLow', 'farPtMid', 'PocketAreaMid', 'OffsetMid', 'LongAxMid', 'ShortAxMid', 'farPtHigh', 'PocketAreaHigh', 'OffsetHigh', 'LongAxHigh', 'ShortAxHigh']
     pocket_set = list(set(pocket_set).difference(other_bad_terms))
     #pocket lining only
-    lining_set = ['num_pocket_bb', 'num_pocket_sc', 'avg_eisen_hp', 'min_eisen', 'max_eisen', 'skew_eisen', 'std_dev_eisen', 'avg_kyte_hp', 'min_kyte', 'max_kyte', 'skew_kyte', 'std_dev_kyte', 'occ_vol', 'NoSC_vol', 'SC_vol_perc']
+    lining_set = ['num_pocket_bb', 'num_pocket_sc', 'avg_eisen_hp', 'min_eisen', 'max_eisen', 'skew_eisen', 'std_dev_eisen', 'avg_kyte_hp', 'min_kyte', 'max_kyte', 'skew_kyte', 'std_dev_kyte', 'occ_vol', 'NoSC_vol', 'SC_vol_perc', 'LiningArea']
     lining_set = list(set(lining_set).difference(other_bad_terms))
     
     #print( len(all_gen_set), len(sorted(set(ros_sum_sph+ros_sum_shell+ros_mean_shell+ros_mean_sph))), len(electro), len(geom), len(pocket_set), len(lining_set))
@@ -109,13 +117,6 @@ def subset_data(df, subset, group_split_name = None, fill_missing = True, other_
     if group_split_name != None:
         X["groupID"] = preprocessing.LabelEncoder().fit_transform( df[[group_split_name]].astype(str) ) #add fold identifiers converted to number
 
-    if fill_missing == True:
-        #print(X.head(10))
-        header = list(X)
-        imputer = SimpleImputer(strategy="mean")
-        X = imputer.fit_transform(X) #this converts to numpy array, so have to convert back since we still use column names
-        X = pd.DataFrame(X, columns = header)
-        #print(X.head(10))
     y = df[["SITE_ID", "Catalytic"]] #keep SITE_ID in the answers for merging back later
     return(X, y)
 

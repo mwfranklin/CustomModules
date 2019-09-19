@@ -9,7 +9,7 @@ from collections import Counter
 from sklearn.model_selection import learning_curve
 from sklearn import preprocessing
 from sklearn.impute import SimpleImputer
-from sklearn.metrics import roc_curve, auc, recall_score, f1_score, precision_score, confusion_matrix, matthews_corrcoef, hamming_loss
+from sklearn.metrics import roc_curve, auc, recall_score, f1_score, precision_score, confusion_matrix, matthews_corrcoef, hamming_loss, jaccard_score
 
 def subset_data(df, subset, group_split_name = None, other_bad_terms = []):
     not_needed = ("Catalytic", "SITE_ID", "ValidSet", 'NewSet', 'cath_class', 'cath_arch', 'scop_class', 'scop_fold', 'ECOD_arch', 'ECOD_x_poshom', 'ECOD_hom')
@@ -305,6 +305,9 @@ def prec_score_custom(y_true, y_pred, this_label = 0):
 
 def mcc_score(y_true, y_pred):
     return( matthews_corrcoef(y_true, y_pred))
+    
+def jac_score(y_true, y_pred, this_label = 0):
+    return( jaccard_score(y_true, y_pred, pos_label=this_label))    
 
 def hamming_score(y_true, y_pred):
     return( hamming_loss(y_true, y_pred))
